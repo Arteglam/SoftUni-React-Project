@@ -1,0 +1,62 @@
+@use "sass:color";
+
+.headerContainer {
+  background-color: #1e88e5;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.logo {
+  img {
+    height: 50px;
+    margin-right: 16px;
+  }
+}
+
+.headerTitle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-weight: 500;
+}
+
+.headerNav {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+
+  a {
+    text-decoration: none;
+    color: inherit;
+    
+    &:hover {
+      text-decoration: none;
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+nav a, nav button {
+  color: #fff;
+  text-decoration: none;
+  margin: 0 10px;
+  font-size: medium;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: color.adjust(#1e88e5, $lightness: -5%);
+    text-decoration: underline;
+  }
+}
+
+.spacer {
+  flex: 1;
+}

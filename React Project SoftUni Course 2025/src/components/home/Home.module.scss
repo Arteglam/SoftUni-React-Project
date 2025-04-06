@@ -1,0 +1,51 @@
+@use "sass:color";
+
+.homeContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  background-color: #f0f4f8;
+  padding: 20px;
+}
+
+.homeContent {
+  flex: 1;
+  max-width: 800px;
+  width: 100%;
+  text-align: center;
+}
+
+.homeCard {
+  margin-bottom: 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  width: 100%;
+  max-width: 800px;
+  text-align: center;
+
+  img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+    width: 75%;
+  }
+}
+
+.cardTitleText {
+  font-size: 1.3em;
+  color: #1e88e5;
+  text-align: center;
+  display: block;
+}
+
+.welcomeBar {
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 20px;
+  text-align: center;
+}
