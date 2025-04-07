@@ -61,16 +61,23 @@ export default function Profile() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const unsubscribe = authApi.onAuthStateChange(async (currentUser) => {
-            setUser(currentUser);
-            if (currentUser) {
-                const profile = await authApi.getUserProfile(currentUser.uid);
-                setUserProfile(profile);
-                loadUserGames(currentUser.uid);
-            }
-        });
+        let unsubscribe;
+        const setupProfile = async () => {
+            unsubscribe = authApi.onAuthStateChange(async (currentUser) => {
+                setUser(currentUser);
+                if (currentUser) {
+                    const profile = await authApi.getUserProfile(currentUser.uid);
+                    setUserProfile(profile);
+                    loadUserGames(currentUser.uid);
+                }
+            });
+        };
 
-        return () => unsubscribe();
+        setupProfile();
+
+        return () => {
+            unsubscribe?.();
+        };
     }, []);
 
     const loadUserGames = async (userId) => {
@@ -184,6 +191,9 @@ export default function Profile() {
                                             src={game.image}
                                             alt={game.title}
                                             className={styles['game-image']}
+                                            onError={(e) => {
+                                                e.target.src = '/fallback-image.png';
+                                            }}
                                             onClick={() => goToDetails(game._id)}
                                         />
                                         <div

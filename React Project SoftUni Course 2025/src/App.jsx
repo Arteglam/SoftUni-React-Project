@@ -21,45 +21,48 @@ import GameEdit from "./components/games/game-edit/GameEdit";
 import Error404 from "./components/errors/Error404/Error404";
 import Header from "./components/core/header/Header";
 import Footer from "./components/core/footer/Footer";
+import { ErrorBoundary } from "./components/errors/ErrorBoundary";
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <div id="box">
-        <Header />
-        <main id="main-content">
-          <Routes>
-            {/* Redirect from root to home */}
-            <Route path="" element={<Navigate to="/home" replace />} />
-            
-            {/* Public routes */}
-            <Route path="/home" element={<Home />} />
-            <Route path="/catalog" element={<GamesCatalog />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/details/:id" element={<GameDetails />} />
+      <ErrorBoundary>
+        <div id="box">
+          <Header />
+          <main id="main-content">
+            <Routes>
+              {/* Redirect from root to home */}
+              <Route path="" element={<Navigate to="/home" replace />} />
+              
+              {/* Public routes */}
+              <Route path="/home" element={<Home />} />
+              <Route path="/catalog" element={<GamesCatalog />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/details/:id" element={<GameDetails />} />
 
-            {/* Guest routes */}
-            <Route element={<GuestGuard />}>
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-            </Route>
+              {/* Guest routes */}
+              <Route element={<GuestGuard />}>
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+              </Route>
 
-            {/* Protected routes */}
-            <Route element={<AuthGuard />}>
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/create" element={<GameCreate />} />
-              <Route path="/edit/:id" element={<GameEdit />} />
-            </Route>
+              {/* Protected routes */}
+              <Route element={<AuthGuard />}>
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/create" element={<GameCreate />} />
+                <Route path="/edit/:id" element={<GameEdit />} />
+              </Route>
 
-            {/* 404 route */}
-            <Route path="*" element={<Error404 />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
+              {/* 404 route */}
+              <Route path="*" element={<Error404 />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }

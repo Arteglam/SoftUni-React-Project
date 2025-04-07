@@ -1,6 +1,20 @@
 export function formatElapsedTime(timestamp) {
-    const seconds = Math.floor((Date.now() - timestamp.toDate()) / 1000);
-    
+    if (!timestamp) return '';
+
+    let date;
+    if (timestamp.toDate && typeof timestamp.toDate === 'function') {
+        // Handle Firestore Timestamp
+        date = timestamp.toDate();
+    } else if (timestamp instanceof Date) {
+        // Handle regular Date object
+        date = timestamp;
+    } else {
+        // Handle string or number timestamp
+        date = new Date(timestamp);
+    }
+
+    const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
     if (seconds < 60) return `${seconds} seconds ago`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes} minutes ago`;

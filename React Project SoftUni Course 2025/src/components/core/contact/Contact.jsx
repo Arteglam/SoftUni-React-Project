@@ -30,9 +30,12 @@ export default function Contact() {
             message: ''
         },
         validationSchema: validationSchema,
-        onSubmit: async (values, { resetForm }) => {
+        onSubmit: async (values, { resetForm, setSubmitting }) => {
             try {
-                await authApi.saveContactForm(values);
+                await authApi.saveContactForm({
+                    ...values,
+                    createdAt: new Date()
+                });
                 console.log('Form Submitted', values);
                 
                 // Show success message
@@ -51,6 +54,8 @@ export default function Contact() {
                     severity: 'error',
                     message: 'Error submitting form. Please try again.'
                 });
+            } finally {
+                setSubmitting(false);
             }
         }
     });

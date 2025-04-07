@@ -7,11 +7,18 @@ export default function GuestGuard() {
     const location = useLocation();
 
     useEffect(() => {
-        const unsubscribe = authApi.onAuthStateChange((user) => {
-            setIsAuthenticated(!!user);
-        });
+        let unsubscribe;
+        const setupAuth = () => {
+            unsubscribe = authApi.onAuthStateChange((user) => {
+                setIsAuthenticated(!!user);
+            });
+        };
 
-        return () => unsubscribe();
+        setupAuth();
+
+        return () => {
+            unsubscribe?.();
+        };
     }, []);
 
     // Show nothing while checking authentication

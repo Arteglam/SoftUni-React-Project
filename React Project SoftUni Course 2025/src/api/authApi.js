@@ -14,7 +14,8 @@ import {
     collection,
     updateDoc,
     getDocs,
-    addDoc
+    addDoc,
+    deleteDoc
 } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { app, storage } from '../config/firebase-config';

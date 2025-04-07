@@ -48,15 +48,16 @@ export default function Gallery() {
     };
 
     const filterGames = (value) => {
+        let filtered;
         if (!value) {
-            setFilteredGames(games);
+            filtered = games;
         } else {
-            const filtered = games.filter(game =>
+            filtered = games.filter(game =>
                 game.title.toLowerCase().includes(value.toLowerCase())
             );
-            setFilteredGames(filtered);
         }
-        paginateGames(value ? filtered : games, 1);
+        setFilteredGames(filtered);
+        paginateGames(filtered, 1);
         setPage(1);
     };
 

@@ -18,11 +18,18 @@ export default function Header() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = authApi.onAuthStateChange((user) => {
-      setUser(user);
-    });
+    let unsubscribe;
+    const setupAuth = () => {
+        unsubscribe = authApi.onAuthStateChange((currentUser) => {
+            setUser(currentUser);
+        });
+    };
 
-    return () => unsubscribe();
+    setupAuth();
+
+    return () => {
+        unsubscribe?.();
+    };
   }, []);
 
   const handleSignOut = async () => {

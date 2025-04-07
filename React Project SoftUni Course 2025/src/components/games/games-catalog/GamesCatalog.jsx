@@ -47,15 +47,22 @@ export default function GamesCatalog() {
     const pageSize = 12;
 
     useEffect(() => {
-        loadGames();
-        const unsubscribe = authApi.onAuthStateChange((user) => {
-            setUser(user);
-            if (user) {
-                loadUserGames(user.uid);
-            }
-        });
+        let unsubscribe;
+        const setupCatalog = async () => {
+            unsubscribe = authApi.onAuthStateChange((user) => {
+                setUser(user);
+                if (user) {
+                    loadUserGames(user.uid);
+                }
+            });
+            await loadGames();
+        };
 
-        return () => unsubscribe();
+        setupCatalog();
+
+        return () => {
+            unsubscribe?.();
+        };
     }, []);
 
     const loadGames = async () => {
@@ -101,14 +108,19 @@ export default function GamesCatalog() {
         sortGames(filteredGames, criteria);
     };
 
+    // Update sorting to handle missing properties
     const sortGames = (gamesArray, criteria) => {
         const sortedGames = [...gamesArray];
         if (criteria === 'rating') {
-            sortedGames.sort((a, b) => b.rating - a.rating);
+            sortedGames.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         } else if (criteria === 'year') {
-            sortedGames.sort((a, b) => b.year - a.year);
+            sortedGames.sort((a, b) => (b.year || 0) - (a.year || 0));
         } else {
-            sortedGames.sort((a, b) => b.createdAt.seconds - a.createdAt.seconds);
+            sortedGames.sort((a, b) => {
+                const bTime = b.createdAt?.seconds || 0;
+                const aTime = a.createdAt?.seconds || 0;
+                return bTime - aTime;
+            });
         }
         setFilteredGames(sortedGames);
         paginateGames(sortedGames, page);

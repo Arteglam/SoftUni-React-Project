@@ -4,41 +4,39 @@ import {
     TextField,
     Button,
     Pagination,
-    Box
+    Box,
+    Alert
 } from '@mui/material';
 import authApi from '../../../../api/authApi';
 import commentsApi from '../../../../api/commentsApi';
 import { formatElapsedTime } from '../../../../utils/timeUtils';
 import styles from './GameComments.module.scss';
 
-export default function GameComments({ gameId }) {
+export default function GameComments({ gameId, loadComments }) {
     const [comments, setComments] = useState([]);
-    const [paginatedComments, setPaginatedComments] = useState([]);
     const [user, setUser] = useState(null);
     const [editingComment, setEditingComment] = useState(null);
     const [editText, setEditText] = useState('');
     const [page, setPage] = useState(1);
-    const [pageSize, setPageSize] = useState(10);
+    const [error, setError] = useState(null);
+    const [paginatedComments, setPaginatedComments] = useState([]);
+    const pageSize = 5;
+
+    const refreshComments = async () => {
+        const newComments = await loadComments();
+        setComments(newComments);
+        paginateComments(newComments, 1);
+    };
 
     useEffect(() => {
+        refreshComments();
+        
         const unsubscribe = authApi.onAuthStateChange((currentUser) => {
             setUser(currentUser);
         });
 
-        loadComments();
-
         return () => unsubscribe();
     }, [gameId]);
-
-    const loadComments = async () => {
-        try {
-            const fetchedComments = await commentsApi.getComments(gameId);
-            setComments(fetchedComments);
-            paginateComments(fetchedComments, page);
-        } catch (error) {
-            console.error('Error loading comments:', error);
-        }
-    };
 
     const paginateComments = (commentsArray, currentPage) => {
         const startIndex = (currentPage - 1) * pageSize;
@@ -52,45 +50,28 @@ export default function GameComments({ gameId }) {
     };
 
     const handleDeleteComment = async (commentId) => {
-        if (user) {
-            try {
-                await commentsApi.deleteComment(gameId, commentId);
-                const updatedComments = comments.filter(comment => comment.id !== commentId);
-                setComments(updatedComments);
-                paginateComments(updatedComments, page);
-            } catch (error) {
-                console.error('Error deleting comment:', error);
-            }
+        try {
+            await commentsApi.deleteComment(gameId, commentId);
+            await refreshComments(); // Refresh comments after deletion
+            setError(null);
+        } catch (err) {
+            setError('Failed to delete comment');
+            console.error('Error deleting comment:', err);
         }
-    };
-
-    const handleEditComment = (comment) => {
-        setEditingComment(comment);
-        setEditText(comment.text);
     };
 
     const handleUpdateComment = async () => {
-        if (user && editingComment) {
-            try {
-                await commentsApi.updateComment(gameId, editingComment.id, editText);
-                const updatedComments = comments.map(comment => 
-                    comment.id === editingComment.id 
-                        ? { ...comment, text: editText }
-                        : comment
-                );
-                setComments(updatedComments);
-                paginateComments(updatedComments, page);
-                setEditingComment(null);
-                setEditText('');
-            } catch (error) {
-                console.error('Error updating comment:', error);
-            }
+        if (!editingComment) return;
+        
+        try {
+            await commentsApi.updateComment(gameId, editingComment.id, editText);
+            await refreshComments(); // Refresh immediately after update
+            setEditingComment(null);
+            setEditText('');
+        } catch (err) {
+            setError('Failed to update comment');
+            console.error('Error updating comment:', err);
         }
-    };
-
-    const handleCancelEdit = () => {
-        setEditingComment(null);
-        setEditText('');
     };
 
     return (
@@ -98,6 +79,12 @@ export default function GameComments({ gameId }) {
             <Typography variant="h5" component="h2" gutterBottom>
                 Comments
             </Typography>
+
+            {error && (
+                <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
 
             <div className={styles['comments-list']}>
                 {paginatedComments.map((comment) => (
@@ -116,20 +103,28 @@ export default function GameComments({ gameId }) {
                                     onChange={(e) => setEditText(e.target.value)}
                                     className={styles['edit-textarea']}
                                 />
-                                <Button onClick={handleUpdateComment}>Save</Button>
-                                <Button onClick={handleCancelEdit}>Cancel</Button>
+                                <Box className={styles['comment-actions']}>
+                                    <Button onClick={handleUpdateComment}>Save</Button>
+                                    <Button onClick={() => {
+                                        setEditingComment(null);
+                                        setEditText('');
+                                    }}>Cancel</Button>
+                                </Box>
                             </Box>
                         ) : (
                             <Box>
                                 <Typography className={styles['comment-text']}>
                                     {comment.text}
                                 </Typography>
-                                {comment.userId === user?.uid && (
-                                    <Box>
+                                {user?.uid === comment.userId && (
+                                    <Box className={styles['comment-actions']}>
                                         <Button onClick={() => handleDeleteComment(comment.id)}>
                                             Delete
                                         </Button>
-                                        <Button onClick={() => handleEditComment(comment)}>
+                                        <Button onClick={() => {
+                                            setEditingComment(comment);
+                                            setEditText(comment.text);
+                                        }}>
                                             Edit
                                         </Button>
                                     </Box>
@@ -140,14 +135,16 @@ export default function GameComments({ gameId }) {
                 ))}
             </div>
 
-            <Box mt={2}>
-                <Pagination
-                    count={Math.ceil(comments.length / pageSize)}
-                    page={page}
-                    onChange={handlePageChange}
-                    color="primary"
-                />
-            </Box>
+            {comments.length > pageSize && (
+                <Box mt={2} display="flex" justifyContent="center">
+                    <Pagination
+                        count={Math.ceil(comments.length / pageSize)}
+                        page={page}
+                        onChange={handlePageChange}
+                        color="primary"
+                    />
+                </Box>
+            )}
         </div>
     );
 }

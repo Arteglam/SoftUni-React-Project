@@ -12,6 +12,7 @@ import styles from './GameCommentForm.module.scss';
 import authApi from '../../../../api/authApi';
 import commentsApi from '../../../../api/commentsApi';
 import gameApi from '../../../../api/gameApi';
+import { Timestamp } from 'firebase/firestore';
 
 const validationSchema = Yup.object({
     text: Yup.string()
@@ -19,22 +20,23 @@ const validationSchema = Yup.object({
         .required('Comment is required')
 });
 
-export default function GameCommentForm({ gameId, editingComment = null, onCommentUpdated, onEditingCleared }) {
+export default function GameCommentForm({ gameId, loadComments }) {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const unsubscribe = authApi.onAuthStateChange((currentUser) => {
-            setUser(currentUser);
-        });
+        let unsubscribe;
+        const setupAuth = () => {
+            unsubscribe = authApi.onAuthStateChange((currentUser) => {
+                setUser(currentUser);
+            });
+        };
 
-        return () => unsubscribe();
+        setupAuth();
+
+        return () => {
+            unsubscribe?.();
+        };
     }, []);
-
-    useEffect(() => {
-        if (editingComment) {
-            formik.setFieldValue('text', editingComment.text);
-        }
-    }, [editingComment]);
 
     const formik = useFormik({
         initialValues: {
@@ -44,22 +46,19 @@ export default function GameCommentForm({ gameId, editingComment = null, onComme
         onSubmit: async (values, { resetForm }) => {
             if (user) {
                 try {
-                    if (editingComment) {
-                        await commentsApi.updateComment(gameId, editingComment.id, values.text);
-                        onCommentUpdated?.(values.text);
-                        onEditingCleared?.();
-                    } else {
-                        const commentData = {
-                            id: gameApi.generateId(),
-                            text: values.text,
-                            userId: user.uid,
-                            userName: user.displayName || 'Anonymous',
-                            gameId,
-                            createdAt: new Date()
-                        };
-                        await commentsApi.addComment(gameId, commentData);
-                    }
+                    const commentData = {
+                        text: values.text,
+                        userId: user.uid,
+                        userName: user.displayName || 'Anonymous',
+                        gameId,
+                        createdAt: Timestamp.now()
+                    };
+                    await commentsApi.addComment(gameId, commentData);
                     resetForm();
+                    const updatedComments = await loadComments(); // Get fresh comments
+                    if (typeof loadComments === 'function') {
+                        loadComments(updatedComments); // Pass updated comments back
+                    }
                 } catch (error) {
                     console.error('Error submitting comment:', error);
                 }
@@ -98,20 +97,8 @@ export default function GameCommentForm({ gameId, editingComment = null, onComme
                         color="primary"
                         fullWidth
                     >
-                        {editingComment ? 'Update Comment' : 'Post Comment'}
+                        Post Comment
                     </Button>
-                    {editingComment && (
-                        <Button
-                            variant="outlined"
-                            color="secondary"
-                            onClick={() => {
-                                formik.resetForm();
-                                onEditingCleared?.();
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                    )}
                 </Box>
             </form>
         </div>

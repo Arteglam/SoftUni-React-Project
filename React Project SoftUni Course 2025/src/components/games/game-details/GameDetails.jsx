@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import gameApi from '../../../api/gameApi';
 import authApi from '../../../api/authApi';
+import commentsApi from '../../../api/commentsApi';
 import GameComments from './game-comments/GameComments';
 import GameCommentForm from './game-comment-form/GameCommentForm';
 import ConfirmDeleteDialog from '../../shared/ConfirmDeleteDialog/ConfirmDeleteDialog';
@@ -37,13 +38,19 @@ export default function GameDetails() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const unsubscribe = authApi.onAuthStateChange((currentUser) => {
-            setUser(currentUser);
-        });
-
-        loadGameDetails();
-
-        return () => unsubscribe();
+        let unsubscribe;
+        const setupAuth = async () => {
+            unsubscribe = authApi.onAuthStateChange((currentUser) => {
+                setUser(currentUser);
+            });
+            await loadGameDetails();
+        };
+        
+        setupAuth();
+        
+        return () => {
+            unsubscribe?.();
+        };
     }, [gameId]);
 
     const loadGameDetails = async () => {
@@ -58,7 +65,13 @@ export default function GameDetails() {
     };
 
     const loadComments = async () => {
-        // Placeholder for loading comments logic
+        try {
+            const comments = await commentsApi.getComments(gameId);
+            return comments;
+        } catch (error) {
+            console.error('Error loading comments:', error);
+            return [];
+        }
     };
 
     const handleDeleteClick = () => {
@@ -102,7 +115,10 @@ export default function GameDetails() {
     return (
         <div className={styles['details-container']}>
             <div className={styles['comments-section']}>
-                <GameComments gameId={gameId} />
+                <GameComments 
+                    gameId={gameId} 
+                    loadComments={loadComments} 
+                />
             </div>
 
             <div className={styles['details-section']}>
@@ -160,11 +176,7 @@ export default function GameDetails() {
             <div className={styles['comment-form-section']}>
                 <GameCommentForm 
                     gameId={gameId}
-                    editingComment={editingComment}
-                    onCommentUpdated={(text) => {
-                        // Handle comment update
-                        loadComments();
-                    }}
+                    loadComments={loadComments}
                     onEditingCleared={() => setEditingComment(null)}
                 />
             </div>
