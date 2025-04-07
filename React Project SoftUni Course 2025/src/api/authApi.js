@@ -127,9 +127,21 @@ class AuthApi {
     }
 
     async uploadProfileImage(userId, file) {
-        const storageRef = ref(storage, `profileImages/${userId}`);
-        await uploadBytes(storageRef, file);
-        return await getDownloadURL(storageRef);
+        try {
+            // Create a reference with a unique filename
+            const filename = `${Date.now()}_${file.name}`;
+            const storageRef = ref(storage, `profileImages/${userId}/${filename}`);
+            
+            // Upload the file
+            const snapshot = await uploadBytes(storageRef, file);
+            
+            // Get the download URL
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            return downloadURL;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw new Error('Failed to upload profile image. Please try again.');
+        }
     }
 
     async addGameToUserProfile(userId, game) {

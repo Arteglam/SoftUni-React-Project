@@ -44,7 +44,7 @@ export default function Header() {
   return (
     <AppBar position="static" className={styles.headerContainer}>
       <Container maxWidth="xl">
-        <Toolbar>
+        <Toolbar className={styles.headerContent}>
           <Box className={styles.logo}>
             <Link to="/">
               <img src="/logo.webp" alt="Logo" />

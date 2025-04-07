@@ -115,15 +115,27 @@ export default function Profile() {
         if (user && selectedFile) {
             setImageLoading(true);
             try {
+                // Generate a unique filename
                 const downloadURL = await authApi.uploadProfileImage(user.uid, selectedFile);
-                await authApi.updateUserProfile(user.uid, { profileImageUrl: downloadURL });
+                
+                // Update user profile with new image URL
+                await authApi.updateUserProfile(user.uid, { 
+                    profileImageUrl: downloadURL,
+                    updatedAt: new Date()
+                });
+                
+                // Refresh profile data
                 const updatedProfile = await authApi.getUserProfile(user.uid);
                 setUserProfile(updatedProfile);
                 setSelectedFile(null);
+                
                 showSnackbar('Profile image uploaded successfully!', 'success');
             } catch (error) {
                 console.error('Error uploading profile image:', error);
-                showSnackbar('Error uploading profile image. Please try again.', 'error');
+                showSnackbar(
+                    error.message || 'Error uploading profile image. Please try again.', 
+                    'error'
+                );
             } finally {
                 setImageLoading(false);
             }
