@@ -1,0 +1,49 @@
+.edit-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 64px);
+    background-color: #f0f4f8;
+    padding: 20px;
+}
+
+.edit-card {
+    padding: 20px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+
+    h2 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #1e88e5;
+        margin-bottom: 20px;
+    }
+}
+
+.full-width {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 20px;
+
+    button {
+        flex: 1;
+        padding: 12px;
+        font-size: 16px;
+    }
+}
+
+.error-message {
+    color: #f44336;
+    margin-top: 16px;
+    text-align: center;
+}
