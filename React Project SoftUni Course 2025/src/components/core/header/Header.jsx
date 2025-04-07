@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
 import { Link } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
@@ -9,13 +11,27 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LoginIcon from '@mui/icons-material/Login';
 import styles from './Header.module.scss';
+import authApi from '../../../api/authApi';
 
 export default function Header() {
-  // TODO: Add user authentication state
-  const user = null; // Replace with actual auth state
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  const handleSignOut = () => {
-    // TODO: Implement sign out logic
+  useEffect(() => {
+    const unsubscribe = authApi.onAuthStateChange((user) => {
+      setUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await authApi.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (

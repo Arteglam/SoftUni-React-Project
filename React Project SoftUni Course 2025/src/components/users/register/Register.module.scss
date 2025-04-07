@@ -1,3 +1,5 @@
+@use "sass:color";
+
 .register-container {
     display: flex;
     justify-content: center;
@@ -37,9 +39,9 @@
     padding: 10px;
     margin-top: 20px;
 
-    &:hover {
-        background-color: darken(#1e88e5, 10%);
-    }
+    // &:hover {
+    //     background-color: darken(#1e88e5, 10%);
+    // }
 }
 
 .login-link {

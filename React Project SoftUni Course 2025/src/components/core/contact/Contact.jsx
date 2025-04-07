@@ -1,27 +1,59 @@
-import { useState } from 'react';
-import { Card, CardContent, TextField, Button, Typography, Box } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
+import { 
+    Card, 
+    CardContent, 
+    TextField, 
+    Button, 
+    Typography, 
+    Box,
+    Snackbar,
+    Alert
+} from '@mui/material';
 import styles from './Contact.module.scss';
+import authApi from '../../../api/authApi';
+
+const validationSchema = Yup.object({
+    name: Yup.string().required('Name is required'),
+    email: Yup.string().email('Invalid email format').required('Email is required'),
+    message: Yup.string().required('Message is required')
+});
 
 export default function Contact() {
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        message: ''
+    const navigate = useNavigate();
+
+    const formik = useFormik({
+        initialValues: {
+            name: '',
+            email: '',
+            message: ''
+        },
+        validationSchema: validationSchema,
+        onSubmit: async (values, { resetForm }) => {
+            try {
+                await authApi.saveContactForm(values);
+                console.log('Form Submitted', values);
+                
+                // Show success message
+                formik.setStatus({
+                    severity: 'success',
+                    message: 'Thank you for contacting us. We will reach to you soon!'
+                });
+                
+                resetForm();
+                setTimeout(() => {
+                    navigate('/');
+                }, 3000);
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                formik.setStatus({
+                    severity: 'error',
+                    message: 'Error submitting form. Please try again.'
+                });
+            }
+        }
     });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        // Handle form submission
-        console.log(formData);
-    };
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
-    };
 
     return (
         <Box className={styles.contactContainer}>
@@ -30,13 +62,15 @@ export default function Contact() {
                     Contact Us
                 </Typography>
                 <CardContent>
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={formik.handleSubmit}>
                         <TextField
                             fullWidth
                             label="Name"
                             name="name"
-                            value={formData.name}
-                            onChange={handleChange}
+                            value={formik.values.name}
+                            onChange={formik.handleChange}
+                            error={formik.touched.name && Boolean(formik.errors.name)}
+                            helperText={formik.touched.name && formik.errors.name}
                             margin="normal"
                             required
                         />
@@ -45,8 +79,10 @@ export default function Contact() {
                             label="Email"
                             name="email"
                             type="email"
-                            value={formData.email}
-                            onChange={handleChange}
+                            value={formik.values.email}
+                            onChange={formik.handleChange}
+                            error={formik.touched.email && Boolean(formik.errors.email)}
+                            helperText={formik.touched.email && formik.errors.email}
                             margin="normal"
                             required
                         />
@@ -56,8 +92,10 @@ export default function Contact() {
                             name="message"
                             multiline
                             rows={4}
-                            value={formData.message}
-                            onChange={handleChange}
+                            value={formik.values.message}
+                            onChange={formik.handleChange}
+                            error={formik.touched.message && Boolean(formik.errors.message)}
+                            helperText={formik.touched.message && formik.errors.message}
                             margin="normal"
                             required
                         />
@@ -68,12 +106,28 @@ export default function Contact() {
                             fullWidth
                             size="large"
                             sx={{ mt: 2 }}
+                            disabled={formik.isSubmitting}
                         >
                             Submit
                         </Button>
                     </form>
                 </CardContent>
             </Card>
+
+            {formik.status && (
+                <Snackbar 
+                    open={Boolean(formik.status)}
+                    autoHideDuration={3000}
+                    onClose={() => formik.setStatus(null)}
+                >
+                    <Alert 
+                        severity={formik.status.severity}
+                        onClose={() => formik.setStatus(null)}
+                    >
+                        {formik.status.message}
+                    </Alert>
+                </Snackbar>
+            )}
         </Box>
     );
 }
