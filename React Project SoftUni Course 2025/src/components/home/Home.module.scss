@@ -1,5 +1,9 @@
 @use "sass:color";
 
+h1 {
+  color: #f0f4f8;
+}
+
 .homeContainer {
   display: flex;
   flex-direction: column;
@@ -48,4 +52,10 @@
   max-width: 800px;
   margin-bottom: 20px;
   text-align: center;
+
+  .toolbar {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
 }

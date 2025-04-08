@@ -16,8 +16,8 @@ export default function Home() {
   return (
     <div className={styles.homeContainer}>
       <AppBar position="static" className={styles.welcomeBar}>
-        <Toolbar>
-          <Typography variant="h4" component="h1" align="center">
+        <Toolbar className={styles.toolbar}>
+          <Typography variant="h4" component="h1">
             Welcome to Board Game Hub
           </Typography>
         </Toolbar>
