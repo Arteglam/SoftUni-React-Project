@@ -8,20 +8,61 @@ import {
     query, 
     orderBy, 
     getDocs,
+    limit,
+    startAfter,
     Timestamp 
 } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { db, storage } from '../config/firebase-config';
 
 class GameApi {
-    async getGames() {
-        const gamesCollection = collection(db, 'Games');
-        const gamesQuery = query(gamesCollection, orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(gamesQuery);
-        return querySnapshot.docs.map(doc => ({
-            _id: doc.id,
-            ...doc.data()
-        }));
+    constructor() {
+        this.lastVisible = null;
+    }
+
+    async getGames(page = 1, pageSize = 12, sortBy = 'createdAt') {
+        // Store last document for pagination
+        if (page === 1) {
+            this.lastVisible = null;
+        }
+        
+        try {
+            const gamesCollection = collection(db, 'Games');
+            let gamesQuery;
+            
+            if (page === 1 || !this.lastVisible) {
+                // First page query
+                gamesQuery = query(
+                    gamesCollection,
+                    orderBy(sortBy, 'desc'),
+                    limit(pageSize)
+                );
+            } else {
+                // Subsequent pages
+                gamesQuery = query(
+                    gamesCollection,
+                    orderBy(sortBy, 'desc'),
+                    startAfter(this.lastVisible),
+                    limit(pageSize)
+                );
+            }
+            
+            const querySnapshot = await getDocs(gamesQuery);
+            
+            // Update the last visible document for next pagination
+            const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+            if (lastDoc) {
+                this.lastVisible = lastDoc;
+            }
+            
+            return querySnapshot.docs.map(doc => ({
+                _id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error("Error fetching games:", error);
+            throw error;
+        }
     }
 
     async getGameById(gameId) {

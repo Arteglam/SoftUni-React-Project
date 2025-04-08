@@ -159,6 +159,7 @@ export default function GamesCatalog() {
                             src={game.image}
                             alt={game.title}
                             className={styles['game-image']}
+                            loading='lazy'
                         />
                         <Accordion 
                             sx={{ 
