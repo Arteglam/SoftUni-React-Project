@@ -21,16 +21,13 @@ export default function GuestGuard() {
         };
     }, []);
 
-    // Show nothing while checking authentication
     if (isAuthenticated === null) {
         return null;
     }
 
     if (isAuthenticated) {
-        // Redirect to home if authenticated
         return <Navigate to="/" replace />;
     }
 
-    // Render child routes if not authenticated
     return <Outlet />;
 }

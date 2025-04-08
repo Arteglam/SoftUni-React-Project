@@ -36,18 +36,6 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
-  mat-card-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #1e88e5;
-    text-align: center;
-  }
-  
-  mat-card-content {
-    font-size: 16px;
-    color: #333;
-  }
-  
   .game-image {
     width: 100%;
     max-width: 100%;
@@ -55,15 +43,4 @@
     object-fit: cover;
     margin-top: 10px;
     border-radius: 5px;
-  }
-  
-  mat-card-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-  
-  mat-icon {
-    margin-right: 5px;
-    vertical-align: middle;
   }

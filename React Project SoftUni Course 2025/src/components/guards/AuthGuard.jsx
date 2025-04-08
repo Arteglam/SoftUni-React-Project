@@ -22,7 +22,6 @@ export default function AuthGuard() {
         };
     }, []);
 
-    // Show loading spinner while checking authentication
     if (isAuthenticated === null) {
         return (
             <Box display="flex" justifyContent="center" m={4}>
@@ -32,10 +31,8 @@ export default function AuthGuard() {
     }
 
     if (!isAuthenticated) {
-        // Redirect to login while saving the attempted location
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Render child routes if authenticated
     return <Outlet />;
 }

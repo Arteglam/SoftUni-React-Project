@@ -38,7 +38,6 @@ export default function Contact() {
                 });
                 console.log('Form Submitted', values);
                 
-                // Show success message
                 formik.setStatus({
                     severity: 'success',
                     message: 'Thank you for contacting us. We will reach to you soon!'

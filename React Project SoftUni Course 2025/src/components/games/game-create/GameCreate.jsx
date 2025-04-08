@@ -21,7 +21,8 @@ const validationSchema = Yup.object({
         .max(70, 'Title too long'),
     year: Yup.number()
         .required('Year is required')
-        .min(1975, 'Year must be at least 1975'),
+        .min(1975, 'Year must be at least 1975')
+        .max(2050, 'Year cannot be more than 2050'),
     designer: Yup.string()
         .required('Designer is required')
         .max(70, 'Designer name too long'),

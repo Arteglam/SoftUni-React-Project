@@ -21,7 +21,8 @@ const validationSchema = Yup.object({
         .max(70, 'Title too long'),
     year: Yup.number()
         .required('Year is required')
-        .min(1975, 'Year must be at least 1975'),
+        .min(1975, 'Year must be at least 1975')
+        .max(2050, 'Year cannot be more than 2050'),
     designer: Yup.string()
         .required('Designer is required')
         .max(70, 'Designer name too long'),
@@ -166,6 +167,7 @@ export default function GameEdit() {
                             error={formik.touched.title && Boolean(formik.errors.title)}
                             helperText={formik.touched.title && formik.errors.title}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <TextField
@@ -179,6 +181,7 @@ export default function GameEdit() {
                             error={formik.touched.year && Boolean(formik.errors.year)}
                             helperText={formik.touched.year && formik.errors.year}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <TextField
@@ -191,6 +194,7 @@ export default function GameEdit() {
                             error={formik.touched.designer && Boolean(formik.errors.designer)}
                             helperText={formik.touched.designer && formik.errors.designer}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <TextField
@@ -203,6 +207,7 @@ export default function GameEdit() {
                             error={formik.touched.artist && Boolean(formik.errors.artist)}
                             helperText={formik.touched.artist && formik.errors.artist}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <TextField
@@ -215,6 +220,7 @@ export default function GameEdit() {
                             error={formik.touched.publisher && Boolean(formik.errors.publisher)}
                             helperText={formik.touched.publisher && formik.errors.publisher}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <TextField
@@ -229,6 +235,7 @@ export default function GameEdit() {
                             helperText={formik.touched.rating && formik.errors.rating}
                             className={styles['full-width']}
                             inputProps={{ min: 1, max: 10 }}
+                            margin='normal'
                         />
 
                         <TextField
@@ -241,6 +248,7 @@ export default function GameEdit() {
                             error={formik.touched.category && Boolean(formik.errors.category)}
                             helperText={formik.touched.category && formik.errors.category}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <TextField
@@ -255,6 +263,7 @@ export default function GameEdit() {
                             error={formik.touched.description && Boolean(formik.errors.description)}
                             helperText={formik.touched.description && formik.errors.description}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <TextField
@@ -267,6 +276,7 @@ export default function GameEdit() {
                             error={formik.touched.image && Boolean(formik.errors.image)}
                             helperText={formik.touched.image && formik.errors.image}
                             className={styles['full-width']}
+                            margin='normal'
                         />
 
                         <Box className={styles['button-group']}>

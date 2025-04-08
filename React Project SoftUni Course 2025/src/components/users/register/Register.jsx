@@ -44,7 +44,6 @@ export default function Register() {
         validationSchema: validationSchema,
         onSubmit: async (values) => {
             try {
-                // Replace with your auth service call
                 await authApi.signUpWithEmailAndPassword(
                     values.email, 
                     values.password, 

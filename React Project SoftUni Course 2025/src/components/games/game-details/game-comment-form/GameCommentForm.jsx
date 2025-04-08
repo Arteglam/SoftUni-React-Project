@@ -11,7 +11,6 @@ import {
 import styles from './GameCommentForm.module.scss';
 import authApi from '../../../../api/authApi';
 import commentsApi from '../../../../api/commentsApi';
-import gameApi from '../../../../api/gameApi';
 import { Timestamp } from 'firebase/firestore';
 
 const validationSchema = Yup.object({
@@ -55,9 +54,9 @@ export default function GameCommentForm({ gameId, loadComments }) {
                     };
                     await commentsApi.addComment(gameId, commentData);
                     resetForm();
-                    const updatedComments = await loadComments(); // Get fresh comments
+                    const updatedComments = await loadComments(); 
                     if (typeof loadComments === 'function') {
-                        loadComments(updatedComments); // Pass updated comments back
+                        loadComments(updatedComments); 
                     }
                 } catch (error) {
                     console.error('Error submitting comment:', error);

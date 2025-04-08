@@ -6,7 +6,6 @@ import {
     CardContent,
     CardActions,
     Button,
-    IconButton,
     FormControl,
     InputLabel,
     Select,
@@ -108,7 +107,6 @@ export default function GamesCatalog() {
         sortGames(filteredGames, criteria);
     };
 
-    // Update sorting to handle missing properties
     const sortGames = (gamesArray, criteria) => {
         const sortedGames = [...gamesArray];
         if (criteria === 'rating') {
@@ -149,15 +147,47 @@ export default function GamesCatalog() {
         <div className={styles['catalog-container']}>
             <div className={styles['games-list']}>
                 {paginatedGames.map((game) => (
-                    <Card key={game._id} className={styles['game-card']}>
+                    <Card 
+                        key={game._id} 
+                        className={styles['game-card']}
+                        sx={{ 
+                            backgroundColor: 'transparent',
+                            boxShadow: 'none'
+                        }}
+                    >
                         <img
                             src={game.image}
                             alt={game.title}
                             className={styles['game-image']}
                         />
-                        <Accordion>
-                            <AccordionSummary expandIcon={<ExpandMore />}>
-                                <Typography>{game.title}</Typography>
+                        <Accordion 
+                            sx={{ 
+                                backgroundColor: 'transparent',
+                                '&.Mui-expanded': {
+                                    backgroundColor: 'white',
+                                    margin: 0
+                                }
+                            }}
+                        >
+                            <AccordionSummary 
+                                expandIcon={<ExpandMore />}
+                            >
+                                <Typography
+                                    sx={{ 
+                                        color: '#1e88e5',
+                                        fontWeight: 500,
+                                        fontSize: '16px',
+                                        textDecoration: 'none',
+                                        transition: 'color 0.2s ease',
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            color: '#0d47a1',
+                                            textDecoration: 'none'
+                                        }
+                                    }}
+                                >
+                                    {game.title}
+                                </Typography>
                             </AccordionSummary>
                             <AccordionDetails>
                                 <CardContent>
@@ -172,13 +202,23 @@ export default function GamesCatalog() {
                                         <Schedule /> created {formatElapsedTime(game.createdAt)} by <Person /> {game.userDisplayName}
                                     </Typography>
                                 </CardContent>
-                                <CardActions>
+                                <CardActions sx={{ justifyContent: 'space-between' }}>
                                     <Button
                                         variant="contained"
                                         color="primary"
                                         component={Link}
                                         to={`/details/${game._id}`}
                                         startIcon={<Info />}
+                                        sx={{ 
+                                            flex: 1, 
+                                            margin: '0 4px', 
+                                            minWidth: '120px',
+                                            height: '36px',
+                                            fontSize: '0.875rem',
+                                            textTransform: 'none',
+                                            fontWeight: 500,
+                                            marginLeft: 0
+                                        }}
                                     >
                                         Details
                                     </Button>
@@ -189,6 +229,16 @@ export default function GamesCatalog() {
                                             onClick={() => addGameToProfile(game)}
                                             disabled={isGameInUserProfile(game._id)}
                                             startIcon={<Add />}
+                                            sx={{ 
+                                                flex: 1, 
+                                                margin: '0 4px', 
+                                                minWidth: '120px',
+                                                height: '36px',
+                                                fontSize: '0.875rem',
+                                                textTransform: 'none',
+                                                fontWeight: 500,
+                                                marginRight: 0
+                                            }}
                                         >
                                             Add Game
                                         </Button>

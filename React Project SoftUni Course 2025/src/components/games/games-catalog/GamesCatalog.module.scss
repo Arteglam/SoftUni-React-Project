@@ -39,25 +39,57 @@
     width: 300px;
     display: flex;
     flex-direction: column;
-}
 
-mat-expansion-panel {
-    width: 100%;
-    margin-bottom: 20px;
-}
+    :global(.MuiAccordionSummary-content) {
+        :global(.MuiTypography-root) {
+            color: #1e88e5;
+            font-weight: 500;
+            font-size: 16px;
+            margin: 0;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            cursor: pointer;
 
-mat-expansion-panel-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px;
-    min-height: 64px;
-}
+            &:hover {
+                color: #1565c0; 
+                text-decoration: none;
+            }
+        }
+    }
 
-mat-panel-title {
-    font-size: 15px;
-    font-weight: bold;
-    color: #1e88e5;
+    :global(.MuiAccordion-root) {
+        background-color: transparent;
+
+        &:global(.Mui-expanded) {
+            background-color: #ffffff;
+            margin: 0;
+        }
+    }
+
+    :global(.MuiCardActions-root) {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 16px;
+        
+        :global(.MuiButton-root) {
+            flex: 1;
+            margin: 0 4px;
+            padding: 0;
+            min-width: 120px;
+            height: 36px;
+            font-size: 0.875rem;
+            text-transform: none;
+            font-weight: 500;
+            
+            &:first-child {
+                margin-left: 0;
+            }
+            
+            &:last-child {
+                margin-right: 0;
+            }
+        }
+    }
 }
 
 .game-image {
@@ -67,43 +99,11 @@ mat-panel-title {
     margin-bottom: 10px;
 }
 
-mat-card-content p {
-    font-size: 14px;
-    color: #333;
-    margin: 5px 0;
-}
-
-mat-card-actions {
-    display: flex;
-    justify-content: space-between;
-}
-
-mat-form-field {
-    position: absolute;
-    bottom: 1px;
-    right: 20px;
-    margin: 0;
-}
-
-mat-paginator {
-    width: 100%;
-    max-width: 300px;
-    background-color: #f0f4f8;
-}
-
-p mat-icon {
-    margin-right: 5px;
-    vertical-align: middle;
-}
-
-mat-icon {
-    margin-right: 5px;
-}
-
 .sort-dropdown {
     position: absolute;
-    bottom: 1px;
-    right: 20px;
+    top: 10px;
+    left: 1000px;
+    bottom: 20px;
     margin: 0;
     min-width: 120px;
 }
@@ -112,4 +112,3 @@ mat-icon {
     margin-top: 20px;
     margin-bottom: 20px;
 }
-
