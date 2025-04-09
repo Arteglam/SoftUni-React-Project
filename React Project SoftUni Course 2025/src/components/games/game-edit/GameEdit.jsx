@@ -71,6 +71,8 @@ export default function GameEdit() {
             image: ''
         },
         validationSchema,
+        validateOnChange: true, // Enable validation as user types
+        validateOnBlur: true,   // Also validate when field loses focus
         onSubmit: async (values) => {
             showLoading();
             try {
@@ -107,6 +109,7 @@ export default function GameEdit() {
             } catch (error) {
                 console.error('Error loading game details:', error);
                 showNotification('Error loading game details', 'error');
+                navigate('/catalog');
             } finally {
                 hideLoading();
             }
@@ -115,10 +118,24 @@ export default function GameEdit() {
         loadGameDetails();
     }, [gameId]);
 
+    // This function helps check if we should show an error for a field
+    const shouldShowError = (fieldName) => {
+        // Show error if field was touched OR if user has started typing in it
+        return (formik.touched[fieldName] || formik.values[fieldName] !== '') && Boolean(formik.errors[fieldName]);
+    };
+
+    // Get helper text for a field
+    const getHelperText = (fieldName) => {
+        // Show error message if we should show error, otherwise show empty string
+        return shouldShowError(fieldName) ? formik.errors[fieldName] : '';
+    };
+
+    // Open the delete confirmation dialog
     const handleDeleteClick = () => {
         setDeleteDialogOpen(true);
     };
 
+    // Handle the actual deletion after confirmation
     const handleDeleteConfirm = async () => {
         showLoading();
         try {
@@ -149,10 +166,11 @@ export default function GameEdit() {
                             label="Title"
                             value={formik.values.title}
                             onChange={formik.handleChange}
-                            error={formik.touched.title && Boolean(formik.errors.title)}
-                            helperText={formik.touched.title && formik.errors.title}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('title')}
+                            helperText={getHelperText('title')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <TextField
@@ -163,10 +181,11 @@ export default function GameEdit() {
                             type="number"
                             value={formik.values.year}
                             onChange={formik.handleChange}
-                            error={formik.touched.year && Boolean(formik.errors.year)}
-                            helperText={formik.touched.year && formik.errors.year}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('year')}
+                            helperText={getHelperText('year')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <TextField
@@ -176,10 +195,11 @@ export default function GameEdit() {
                             label="Designer"
                             value={formik.values.designer}
                             onChange={formik.handleChange}
-                            error={formik.touched.designer && Boolean(formik.errors.designer)}
-                            helperText={formik.touched.designer && formik.errors.designer}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('designer')}
+                            helperText={getHelperText('designer')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <TextField
@@ -189,10 +209,11 @@ export default function GameEdit() {
                             label="Artist"
                             value={formik.values.artist}
                             onChange={formik.handleChange}
-                            error={formik.touched.artist && Boolean(formik.errors.artist)}
-                            helperText={formik.touched.artist && formik.errors.artist}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('artist')}
+                            helperText={getHelperText('artist')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <TextField
@@ -202,10 +223,11 @@ export default function GameEdit() {
                             label="Publisher"
                             value={formik.values.publisher}
                             onChange={formik.handleChange}
-                            error={formik.touched.publisher && Boolean(formik.errors.publisher)}
-                            helperText={formik.touched.publisher && formik.errors.publisher}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('publisher')}
+                            helperText={getHelperText('publisher')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <TextField
@@ -216,11 +238,12 @@ export default function GameEdit() {
                             type="number"
                             value={formik.values.rating}
                             onChange={formik.handleChange}
-                            error={formik.touched.rating && Boolean(formik.errors.rating)}
-                            helperText={formik.touched.rating && formik.errors.rating}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('rating')}
+                            helperText={getHelperText('rating')}
                             className={styles['full-width']}
+                            margin="normal"
                             inputProps={{ min: 1, max: 10 }}
-                            margin='normal'
                         />
 
                         <TextField
@@ -230,10 +253,11 @@ export default function GameEdit() {
                             label="Category"
                             value={formik.values.category}
                             onChange={formik.handleChange}
-                            error={formik.touched.category && Boolean(formik.errors.category)}
-                            helperText={formik.touched.category && formik.errors.category}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('category')}
+                            helperText={getHelperText('category')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <TextField
@@ -245,10 +269,11 @@ export default function GameEdit() {
                             rows={4}
                             value={formik.values.description}
                             onChange={formik.handleChange}
-                            error={formik.touched.description && Boolean(formik.errors.description)}
-                            helperText={formik.touched.description && formik.errors.description}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('description')}
+                            helperText={getHelperText('description')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <TextField
@@ -258,10 +283,11 @@ export default function GameEdit() {
                             label="Image URL"
                             value={formik.values.image}
                             onChange={formik.handleChange}
-                            error={formik.touched.image && Boolean(formik.errors.image)}
-                            helperText={formik.touched.image && formik.errors.image}
+                            onBlur={formik.handleBlur}
+                            error={shouldShowError('image')}
+                            helperText={getHelperText('image')}
                             className={styles['full-width']}
-                            margin='normal'
+                            margin="normal"
                         />
 
                         <Box className={styles['button-group']}>
@@ -269,6 +295,7 @@ export default function GameEdit() {
                                 type="submit"
                                 variant="contained"
                                 color="primary"
+                                disabled={!formik.isValid || formik.isSubmitting}
                             >
                                 Save
                             </Button>
