@@ -5,21 +5,22 @@ import {
     Button,
     Pagination,
     Box,
-    Alert
 } from '@mui/material';
-import authApi from '../../../../api/authApi';
 import commentsApi from '../../../../api/commentsApi';
 import { formatElapsedTime } from '../../../../utils/timeUtils';
 import styles from './GameComments.module.scss';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { useUI } from '../../../../contexts/UIContext';
 
 export default function GameComments({ gameId, loadComments, comments }) {
-    const [user, setUser] = useState(null);
     const [editingComment, setEditingComment] = useState(null);
     const [editText, setEditText] = useState('');
     const [page, setPage] = useState(1);
-    const [error, setError] = useState(null);
     const [paginatedComments, setPaginatedComments] = useState([]);
     const pageSize = 5;
+
+    const { user } = useAuth();
+    const { showError } = useUI();
 
     const paginateComments = (commentsArray, currentPage) => {
         const startIndex = (currentPage - 1) * pageSize;
@@ -28,14 +29,8 @@ export default function GameComments({ gameId, loadComments, comments }) {
     };
 
     useEffect(() => {
-        const unsubscribe = authApi.onAuthStateChange((currentUser) => {
-            setUser(currentUser);
-        });
-        
         paginateComments(comments, page);
-
-        return () => unsubscribe();
-    }, [gameId, comments, page]);
+    }, [comments, page]);
 
     const handlePageChange = (event, value) => {
         setPage(value);
@@ -47,9 +42,8 @@ export default function GameComments({ gameId, loadComments, comments }) {
             await commentsApi.deleteComment(gameId, commentId);
             // Refresh comments after deletion
             await loadComments();
-            setError(null);
         } catch (err) {
-            setError('Failed to delete comment');
+            showError('Failed to delete comment');
             console.error('Error deleting comment:', err);
         }
     };
@@ -64,7 +58,7 @@ export default function GameComments({ gameId, loadComments, comments }) {
             setEditingComment(null);
             setEditText('');
         } catch (err) {
-            setError('Failed to update comment');
+            showError('Failed to update comment');
             console.error('Error updating comment:', err);
         }
     };
@@ -74,12 +68,6 @@ export default function GameComments({ gameId, loadComments, comments }) {
             <Typography variant="h5" component="h2" gutterBottom>
                 Comments
             </Typography>
-
-            {error && (
-                <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
-                    {error}
-                </Alert>
-            )}
 
             <div className={styles['comments-list']}>
                 {paginatedComments.map((comment) => (

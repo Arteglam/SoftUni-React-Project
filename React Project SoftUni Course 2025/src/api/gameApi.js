@@ -66,12 +66,19 @@ class GameApi {
     }
 
     async getGameById(gameId) {
-        const gameDocRef = doc(db, `Games/${gameId}`);
-        const gameDocSnap = await getDoc(gameDocRef);
-        if (gameDocSnap.exists()) {
-            return { _id: gameDocSnap.id, ...gameDocSnap.data() };
+        try {
+            const gameDocRef = doc(db, `Games/${gameId}`);
+            const gameDocSnap = await getDoc(gameDocRef);
+            if (gameDocSnap.exists()) {
+                return { _id: gameDocSnap.id, ...gameDocSnap.data() };
+            } else {
+                console.log(`Game with ID ${gameId} not found`);
+                return null;
+            }
+        } catch (error) {
+            console.error(`Error getting game ${gameId}:`, error);
+            throw error;
         }
-        return null;
     }
 
     async createGame(game, userId, userDisplayName) {

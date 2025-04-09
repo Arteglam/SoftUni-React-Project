@@ -6,8 +6,8 @@ import {
     CardActions,
     Typography,
     Button,
-    CircularProgress,
     Box,
+    CircularProgress
 } from '@mui/material';
 import {
     CalendarToday,
@@ -20,60 +20,76 @@ import {
     Edit,
     Delete
 } from '@mui/icons-material';
-import gameApi from '../../../api/gameApi';
-import authApi from '../../../api/authApi';
 import commentsApi from '../../../api/commentsApi';
 import GameComments from './game-comments/GameComments';
 import GameCommentForm from './game-comment-form/GameCommentForm';
 import ConfirmDeleteDialog from '../../shared/ConfirmDeleteDialog/ConfirmDeleteDialog';
 import styles from './GameDetails.module.scss';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useGames } from '../../../contexts/GamesContext';
+import { useUI } from '../../../contexts/UIContext';
 
 export default function GameDetails() {
-    const [game, setGame] = useState(null);
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [comments, setComments] = useState([]);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [editingComment, setEditingComment] = useState(null);
-    const [comments, setComments] = useState([]); // Add this line
+    const [game, setGame] = useState(null);
+    const [localLoading, setLocalLoading] = useState(true); // Add local loading state
+    
     const { id: gameId } = useParams();
     const navigate = useNavigate();
+    
+    const { user, isAuthenticated } = useAuth();
+    const { getGameById, deleteGame } = useGames();
+    const { showError, showNotification } = useUI();
 
     useEffect(() => {
-        let unsubscribe;
-        const setupAuth = async () => {
-            unsubscribe = authApi.onAuthStateChange((currentUser) => {
-                setUser(currentUser);
-            });
-            await loadGameDetails();
-            await loadComments(); // Add this line
+        let isMounted = true; // Add mounted flag to prevent state updates after unmount
+        
+        const loadData = async () => {
+            setLocalLoading(true);
+            try {
+                const gameData = await getGameById(gameId);
+                
+                // Check if component is still mounted and if gameData exists
+                if (!isMounted) return;
+                
+                // Check if gameData is actually returned
+                if (!gameData) {
+                    throw new Error('Game not found');
+                }
+                
+                setGame(gameData);
+                await loadComments();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showError('Error loading game details');
+                // Navigate back to catalog if game cannot be loaded
+                navigate('/catalog');
+            } finally {
+                if (isMounted) {
+                    setLocalLoading(false);
+                }
+            }
         };
         
-        setupAuth();
+        loadData();
         
+        // Cleanup function to prevent state updates after unmount
         return () => {
-            unsubscribe?.();
+            isMounted = false;
         };
-    }, [gameId]);
-
-    const loadGameDetails = async () => {
-        try {
-            const gameData = await gameApi.getGameById(gameId);
-            setGame(gameData);
-        } catch (error) {
-            console.error('Error loading game details:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [gameId]); // Remove unnecessary dependencies
 
     const loadComments = async () => {
         try {
             const commentsData = await commentsApi.getComments(gameId);
-            setComments(commentsData); // Update comments state
+            setComments(commentsData);
             return commentsData;
         } catch (error) {
             console.error('Error loading comments:', error);
-            setComments([]); // Set empty array on error
+            showError('Error loading comments');
+            setComments([]);
             return [];
         }
     };
@@ -87,13 +103,18 @@ export default function GameDetails() {
     };
 
     const handleDeleteConfirm = async () => {
+        setLocalLoading(true);
         try {
-            await gameApi.deleteGame(gameId);
+            await deleteGame(gameId);
+            showNotification('Game deleted successfully');
             navigate('/catalog');
         } catch (error) {
             console.error('Error deleting game:', error);
+            showError('Error deleting game');
+        } finally {
+            setLocalLoading(false);
+            setDeleteDialogOpen(false);
         }
-        setDeleteDialogOpen(false);
     };
 
     const handleEditClick = () => {
@@ -101,23 +122,20 @@ export default function GameDetails() {
     };
 
     const isCreator = () => {
-        return user && game && user.uid === game.userId;
+        return isAuthenticated && game && user.uid === game.userId;
     };
 
-    if (loading) {
+    // Change the loading indicator to use local state
+    if (localLoading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+            <Box display="flex" justifyContent="center" alignItems="center" height="400px">
                 <CircularProgress />
             </Box>
         );
     }
 
     if (!game) {
-        return (
-            <Typography variant="h6" align="center">
-                Game not found
-            </Typography>
-        );
+        return null;
     }
 
     return (
@@ -126,7 +144,7 @@ export default function GameDetails() {
                 <GameComments 
                     gameId={gameId} 
                     loadComments={loadComments}
-                    comments={comments} // Pass comments state
+                    comments={comments}
                 />
             </div>
 
@@ -185,9 +203,7 @@ export default function GameDetails() {
             <div className={styles['comment-form-section']}>
                 <GameCommentForm 
                     gameId={gameId}
-                    loadComments={loadComments}
-                    onEditingCleared={() => setEditingComment(null)}
-                    refreshComments={refreshComments} // Pass refresh function
+                    refreshComments={refreshComments}
                 />
             </div>
 

@@ -7,12 +7,11 @@ import {
     TextField, 
     Button, 
     Typography, 
-    Box,
-    Snackbar,
-    Alert
+    Box
 } from '@mui/material';
 import styles from './Contact.module.scss';
 import authApi from '../../../api/authApi';
+import { useUI } from '../../../contexts/UIContext';
 
 const validationSchema = Yup.object({
     name: Yup.string().required('Name is required'),
@@ -22,6 +21,7 @@ const validationSchema = Yup.object({
 
 export default function Contact() {
     const navigate = useNavigate();
+    const { showLoading, hideLoading, showNotification } = useUI();
 
     const formik = useFormik({
         initialValues: {
@@ -31,29 +31,22 @@ export default function Contact() {
         },
         validationSchema: validationSchema,
         onSubmit: async (values, { resetForm, setSubmitting }) => {
+            showLoading();
             try {
                 await authApi.saveContactForm({
                     ...values,
                     createdAt: new Date()
                 });
-                console.log('Form Submitted', values);
-                
-                formik.setStatus({
-                    severity: 'success',
-                    message: 'Thank you for contacting us. We will reach to you soon!'
-                });
-                
+                showNotification('Thank you for contacting us. We will reach out to you soon!', 'success');
                 resetForm();
                 setTimeout(() => {
                     navigate('/');
                 }, 3000);
             } catch (error) {
                 console.error('Error submitting form:', error);
-                formik.setStatus({
-                    severity: 'error',
-                    message: 'Error submitting form. Please try again.'
-                });
+                showNotification('Error submitting form. Please try again.', 'error');
             } finally {
+                hideLoading();
                 setSubmitting(false);
             }
         }
@@ -117,21 +110,6 @@ export default function Contact() {
                     </form>
                 </CardContent>
             </Card>
-
-            {formik.status && (
-                <Snackbar 
-                    open={Boolean(formik.status)}
-                    autoHideDuration={3000}
-                    onClose={() => formik.setStatus(null)}
-                >
-                    <Alert 
-                        severity={formik.status.severity}
-                        onClose={() => formik.setStatus(null)}
-                    >
-                        {formik.status.message}
-                    </Alert>
-                </Snackbar>
-            )}
         </Box>
     );
 }

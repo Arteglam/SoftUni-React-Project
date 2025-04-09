@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-    CircularProgress,
     Card,
     CardContent,
     CardActions,
@@ -29,53 +28,30 @@ import {
     Add,
     ExpandMore
 } from '@mui/icons-material';
-import gameApi from '../../../api/gameApi';
 import authApi from '../../../api/authApi';
 import { formatElapsedTime } from '../../../utils/timeUtils';
 import styles from './GamesCatalog.module.scss';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useGames } from '../../../contexts/GamesContext';
+import { useUI } from '../../../contexts/UIContext';
 
 export default function GamesCatalog() {
-    const [games, setGames] = useState([]);
-    const [filteredGames, setFilteredGames] = useState([]);
-    const [paginatedGames, setPaginatedGames] = useState([]);
-    const [user, setUser] = useState(null);
     const [userGameIds, setUserGameIds] = useState(new Set());
-    const [loading, setLoading] = useState(true);
-    const [sortCriteria, setSortCriteria] = useState('createdAt');
+    const [paginatedGames, setPaginatedGames] = useState([]);
     const [page, setPage] = useState(1);
     const pageSize = 12;
 
+    const { user, isAuthenticated } = useAuth();
+    const { games, filteredGames, sortCriteria, handleSort, loading } = useGames();
+    const { showLoading, hideLoading, showNotification } = useUI();
+
     useEffect(() => {
-        let unsubscribe;
-        const setupCatalog = async () => {
-            unsubscribe = authApi.onAuthStateChange((user) => {
-                setUser(user);
-                if (user) {
-                    loadUserGames(user.uid);
-                }
-            });
-            await loadGames();
-        };
-
-        setupCatalog();
-
-        return () => {
-            unsubscribe?.();
-        };
-    }, []);
-
-    const loadGames = async () => {
-        try {
-            const fetchedGames = await gameApi.getGames();
-            setGames(fetchedGames);
-            setFilteredGames(fetchedGames);
-            sortGames(fetchedGames, sortCriteria);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error loading games:', error);
-            setLoading(false);
+        if (user) {
+            loadUserGames(user.uid);
         }
-    };
+        
+        paginateGames(filteredGames, page);
+    }, [user, filteredGames, page]);
 
     const loadUserGames = async (userId) => {
         try {
@@ -83,16 +59,22 @@ export default function GamesCatalog() {
             setUserGameIds(new Set(userGames.map(game => game._id)));
         } catch (error) {
             console.error('Error loading user games:', error);
+            showNotification('Error loading user games', 'error');
         }
     };
 
     const addGameToProfile = async (game) => {
         if (user) {
+            showLoading();
             try {
                 await authApi.addGameToUserProfile(user.uid, game);
                 setUserGameIds(prev => new Set([...prev, game._id]));
+                showNotification('Game added to your profile', 'success');
             } catch (error) {
                 console.error('Error adding game to profile:', error);
+                showNotification('Error adding game to profile', 'error');
+            } finally {
+                hideLoading();
             }
         }
     };
@@ -103,25 +85,7 @@ export default function GamesCatalog() {
 
     const handleSortChange = (event) => {
         const criteria = event.target.value;
-        setSortCriteria(criteria);
-        sortGames(filteredGames, criteria);
-    };
-
-    const sortGames = (gamesArray, criteria) => {
-        const sortedGames = [...gamesArray];
-        if (criteria === 'rating') {
-            sortedGames.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        } else if (criteria === 'year') {
-            sortedGames.sort((a, b) => (b.year || 0) - (a.year || 0));
-        } else {
-            sortedGames.sort((a, b) => {
-                const bTime = b.createdAt?.seconds || 0;
-                const aTime = a.createdAt?.seconds || 0;
-                return bTime - aTime;
-            });
-        }
-        setFilteredGames(sortedGames);
-        paginateGames(sortedGames, page);
+        handleSort(criteria);
     };
 
     const paginateGames = (gamesArray, currentPage) => {
@@ -136,11 +100,7 @@ export default function GamesCatalog() {
     };
 
     if (loading) {
-        return (
-            <div className={styles['loader-container']}>
-                <CircularProgress className={styles.loader} />
-            </div>
-        );
+        return null; // UI Context handles the loading indicator
     }
 
     return (
@@ -223,7 +183,7 @@ export default function GamesCatalog() {
                                     >
                                         Details
                                     </Button>
-                                    {user && (
+                                    {isAuthenticated && (
                                         <Button
                                             variant="contained"
                                             color="secondary"

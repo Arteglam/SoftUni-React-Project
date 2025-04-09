@@ -9,11 +9,11 @@ import {
     TextField,
     Button,
     Box,
-    Snackbar,
-    Alert
 } from '@mui/material';
 import styles from './GameEdit.module.scss';
-import gameApi from '../../../api/gameApi';
+import { useGames } from '../../../contexts/GamesContext';
+import { useUI } from '../../../contexts/UIContext';
+import ConfirmDeleteDialog from '../../shared/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 const validationSchema = Yup.object({
     title: Yup.string()
@@ -51,13 +51,12 @@ const validationSchema = Yup.object({
 });
 
 export default function GameEdit() {
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    
     const { id: gameId } = useParams();
     const navigate = useNavigate();
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success'
-    });
+    const { getGameById, updateGame, deleteGame } = useGames();
+    const { showLoading, hideLoading, showNotification } = useUI();
 
     const formik = useFormik({
         initialValues: {
@@ -73,80 +72,66 @@ export default function GameEdit() {
         },
         validationSchema,
         onSubmit: async (values) => {
+            showLoading();
             try {
-                await gameApi.updateGame(gameId, values);
-                setSnackbar({
-                    open: true,
-                    message: 'Game updated successfully!',
-                    severity: 'success'
-                });
-                setTimeout(() => {
-                    navigate(`/details/${gameId}`);
-                }, 2000);
+                await updateGame(gameId, values);
+                showNotification('Game updated successfully!');
+                navigate(`/details/${gameId}`);
             } catch (error) {
                 console.error('Error updating game:', error);
-                setSnackbar({
-                    open: true,
-                    message: 'Error updating game. Please try again.',
-                    severity: 'error'
-                });
+                showNotification('Error updating game. Please try again.', 'error');
+            } finally {
+                hideLoading();
             }
         }
     });
 
     useEffect(() => {
+        const loadGameDetails = async () => {
+            showLoading();
+            try {
+                const game = await getGameById(gameId);
+                if (game) {
+                    formik.setValues({
+                        title: game.title || '',
+                        year: game.year || '',
+                        designer: game.designer || '',
+                        artist: game.artist || '',
+                        publisher: game.publisher || '',
+                        rating: game.rating || '',
+                        category: game.category || '',
+                        description: game.description || '',
+                        image: game.image || ''
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading game details:', error);
+                showNotification('Error loading game details', 'error');
+            } finally {
+                hideLoading();
+            }
+        };
+
         loadGameDetails();
     }, [gameId]);
 
-    const loadGameDetails = async () => {
-        try {
-            const game = await gameApi.getGameById(gameId);
-            if (game) {
-                formik.setValues({
-                    title: game.title || '',
-                    year: game.year || '',
-                    designer: game.designer || '',
-                    artist: game.artist || '',
-                    publisher: game.publisher || '',
-                    rating: game.rating || '',
-                    category: game.category || '',
-                    description: game.description || '',
-                    image: game.image || ''
-                });
-            }
-        } catch (error) {
-            console.error('Error loading game details:', error);
-            setSnackbar({
-                open: true,
-                message: 'Error loading game details',
-                severity: 'error'
-            });
-        }
+    const handleDeleteClick = () => {
+        setDeleteDialogOpen(true);
     };
 
-    const handleDelete = async () => {
+    const handleDeleteConfirm = async () => {
+        showLoading();
         try {
-            await gameApi.deleteGame(gameId);
-            setSnackbar({
-                open: true,
-                message: 'Game deleted successfully!',
-                severity: 'success'
-            });
-            setTimeout(() => {
-                navigate('/catalog');
-            }, 2000);
+            await deleteGame(gameId);
+            showNotification('Game deleted successfully!');
+            navigate('/catalog');
         } catch (error) {
             console.error('Error deleting game:', error);
-            setSnackbar({
-                open: true,
-                message: 'Error deleting game',
-                severity: 'error'
-            });
+            showNotification('Error deleting game', 'error');
+        } finally {
+            hideLoading();
+            setDeleteDialogOpen(false);
         }
-    };
-
-    const handleSnackbarClose = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
     };
 
     return (
@@ -290,7 +275,7 @@ export default function GameEdit() {
                             <Button
                                 variant="contained"
                                 color="error"
-                                onClick={handleDelete}
+                                onClick={handleDeleteClick}
                             >
                                 Delete
                             </Button>
@@ -299,18 +284,11 @@ export default function GameEdit() {
                 </CardContent>
             </Card>
 
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={3000}
-                onClose={handleSnackbarClose}
-            >
-                <Alert
-                    onClose={handleSnackbarClose}
-                    severity={snackbar.severity}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
+            <ConfirmDeleteDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleDeleteConfirm}
+            />
         </div>
     );
 }

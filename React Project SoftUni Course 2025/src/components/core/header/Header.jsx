@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
 import { Link } from 'react-router-dom';
@@ -11,30 +10,15 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LoginIcon from '@mui/icons-material/Login';
 import styles from './Header.module.scss';
-import authApi from '../../../api/authApi';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export default function Header() {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    let unsubscribe;
-    const setupAuth = () => {
-        unsubscribe = authApi.onAuthStateChange((currentUser) => {
-            setUser(currentUser);
-        });
-    };
-
-    setupAuth();
-
-    return () => {
-        unsubscribe?.();
-    };
-  }, []);
 
   const handleSignOut = async () => {
     try {
-      await authApi.signOut();
+      await logout();
       navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);

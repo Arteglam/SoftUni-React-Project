@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -9,9 +9,10 @@ import {
     Typography
 } from '@mui/material';
 import styles from './GameCommentForm.module.scss';
-import authApi from '../../../../api/authApi';
 import commentsApi from '../../../../api/commentsApi';
 import { Timestamp } from 'firebase/firestore';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { useUI } from '../../../../contexts/UIContext';
 
 const validationSchema = Yup.object({
     text: Yup.string()
@@ -19,23 +20,9 @@ const validationSchema = Yup.object({
         .required('Comment is required')
 });
 
-export default function GameCommentForm({ gameId, loadComments, onEditingCleared, refreshComments }) {
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        let unsubscribe;
-        const setupAuth = () => {
-            unsubscribe = authApi.onAuthStateChange((currentUser) => {
-                setUser(currentUser);
-            });
-        };
-
-        setupAuth();
-
-        return () => {
-            unsubscribe?.();
-        };
-    }, []);
+export default function GameCommentForm({ gameId, refreshComments }) {
+    const { user, isAuthenticated } = useAuth();
+    const { showError } = useUI();
 
     const formik = useFormik({
         initialValues: {
@@ -55,18 +42,18 @@ export default function GameCommentForm({ gameId, loadComments, onEditingCleared
                     await commentsApi.addComment(gameId, commentData);
                     resetForm();
                     
-                    // Call refreshComments instead of loadComments
                     if (refreshComments) {
                         await refreshComments();
                     }
                 } catch (error) {
                     console.error('Error submitting comment:', error);
+                    showError('Failed to submit comment. Please try again.');
                 }
             }
         }
     });
 
-    if (!user) {
+    if (!isAuthenticated) {
         return (
             <div className={styles['login-prompt']}>
                 <Typography>Log in to comment</Typography>

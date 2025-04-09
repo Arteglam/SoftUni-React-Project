@@ -1,28 +1,12 @@
-import { useState, useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
-import authApi from '../../api/authApi';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AuthGuard() {
-    const [isAuthenticated, setIsAuthenticated] = useState(null);
+    const { isAuthenticated, loading } = useAuth();
     const location = useLocation();
 
-    useEffect(() => {
-        let unsubscribe;
-        const setupAuth = () => {
-            unsubscribe = authApi.onAuthStateChange((user) => {
-                setIsAuthenticated(!!user);
-            });
-        };
-
-        setupAuth();
-
-        return () => {
-            unsubscribe?.();
-        };
-    }, []);
-
-    if (isAuthenticated === null) {
+    if (loading) {
         return (
             <Box display="flex" justifyContent="center" m={4}>
                 <CircularProgress />

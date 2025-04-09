@@ -8,58 +8,24 @@ import {
     TextField,
     Pagination,
     Box,
-    CircularProgress,
-    Alert
+    CircularProgress
 } from '@mui/material';
-import gameApi from '../../../api/gameApi';
 import styles from './Gallery.module.scss';
+import { useGames } from '../../../contexts/GamesContext';
+import { useUI } from '../../../contexts/UIContext';
 
 export default function Gallery() {
-    const [games, setGames] = useState([]);
-    const [filteredGames, setFilteredGames] = useState([]);
     const [paginatedGames, setPaginatedGames] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [hoverStates, setHoverStates] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const pageSize = 12;
 
-    useEffect(() => {
-        loadGames();
-    }, []);
+    const { games, filteredGames, loading, handleSearch } = useGames();
 
     useEffect(() => {
-        filterGames(searchTerm);
-    }, [searchTerm, games]);
-
-    const loadGames = async () => {
-        setLoading(true);
-        try {
-            const fetchedGames = await gameApi.getGames();
-            setGames(fetchedGames);
-            setFilteredGames(fetchedGames);
-            paginateGames(fetchedGames, 1);
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const filterGames = (value) => {
-        let filtered;
-        if (!value) {
-            filtered = games;
-        } else {
-            filtered = games.filter(game =>
-                game.title.toLowerCase().includes(value.toLowerCase())
-            );
-        }
-        setFilteredGames(filtered);
-        paginateGames(filtered, 1);
-        setPage(1);
-    };
+        paginateGames(filteredGames, page);
+    }, [filteredGames, page]);
 
     const paginateGames = (gamesArray, currentPage) => {
         const startIndex = (currentPage - 1) * pageSize;
@@ -69,7 +35,6 @@ export default function Gallery() {
 
     const handlePageChange = (event, value) => {
         setPage(value);
-        paginateGames(filteredGames, value);
     };
 
     const handleMouseEnter = (gameId) => {
@@ -82,11 +47,11 @@ export default function Gallery() {
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
+        handleSearch(event.target.value);
     };
 
     if (loading) return <CircularProgress />;
-    if (error) return <Alert severity="error">{error}</Alert>;
-
+    
     return (
         <div className={styles.galleryContainer}>
             <Card className={styles.searchCard}>

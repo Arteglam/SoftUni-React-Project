@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -8,12 +7,11 @@ import {
     Typography,
     TextField,
     Button,
-    Snackbar,
-    Alert
 } from '@mui/material';
 import styles from './GameCreate.module.scss';
-import authApi from '../../../api/authApi';
-import gameApi from '../../../api/gameApi';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useGames } from '../../../contexts/GamesContext';
+import { useUI } from '../../../contexts/UIContext';
 
 const validationSchema = Yup.object({
     title: Yup.string()
@@ -51,21 +49,10 @@ const validationSchema = Yup.object({
 });
 
 export default function GameCreate() {
-    const [user, setUser] = useState(null);
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success'
-    });
     const navigate = useNavigate();
-
-    useEffect(() => {
-        const unsubscribe = authApi.onAuthStateChange((currentUser) => {
-            setUser(currentUser);
-        });
-
-        return () => unsubscribe();
-    }, []);
+    const { user } = useAuth();
+    const { createGame } = useGames();
+    const { showLoading, hideLoading, showNotification } = useUI();
 
     const formik = useFormik({
         initialValues: {
@@ -82,31 +69,22 @@ export default function GameCreate() {
         validationSchema,
         onSubmit: async (values) => {
             if (user) {
+                showLoading();
                 try {
-                    await gameApi.createGame(values, user.uid, user.displayName);
-                    setSnackbar({
-                        open: true,
-                        message: 'Game created successfully!',
-                        severity: 'success'
-                    });
+                    await createGame(values, user.uid, user.displayName);
+                    showNotification('Game created successfully!');
                     setTimeout(() => {
                         navigate('/catalog');
                     }, 2000);
                 } catch (error) {
                     console.error('Error creating game:', error);
-                    setSnackbar({
-                        open: true,
-                        message: 'Error creating game. Please try again.',
-                        severity: 'error'
-                    });
+                    showNotification('Error creating game. Please try again.', 'error');
+                } finally {
+                    hideLoading();
                 }
             }
         }
     });
-
-    const handleSnackbarClose = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
 
     return (
         <div className={styles['create-game-container']}>
@@ -250,19 +228,6 @@ export default function GameCreate() {
                     </form>
                 </CardContent>
             </Card>
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={3000}
-                onClose={handleSnackbarClose}
-            >
-                <Alert
-                    onClose={handleSnackbarClose}
-                    severity={snackbar.severity}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </div>
     );
 }

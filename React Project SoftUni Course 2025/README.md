@@ -21,7 +21,8 @@ Run `npm run dev` for a dev server. Navigate to `http://localhost:5173/`. The ap
 
 The project uses Firebase Backend and Database for users, boardgames, comments and contact forms.
 
-The project uses MUI material library.
+The project uses MUI material library for styling.
+The project is using Formik library for form handling.
 
 You will need the apiKey in the environment.ts file to access the Firebase functionality.
 

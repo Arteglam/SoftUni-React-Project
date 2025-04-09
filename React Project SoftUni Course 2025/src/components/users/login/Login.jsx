@@ -1,15 +1,13 @@
-import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { 
     TextField, 
     Button, 
-    Snackbar, 
-    Alert 
 } from '@mui/material';
 import styles from './Login.module.scss';
-import authApi from '../../../api/authApi';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useUI } from '../../../contexts/UIContext';
 
 const validationSchema = Yup.object({
     email: Yup.string()
@@ -24,11 +22,8 @@ export default function Login() {
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from?.pathname || '/profile';
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success'
-    });
+    const { login } = useAuth();
+    const { showLoading, hideLoading, showNotification } = useUI();
 
     const formik = useFormik({
         initialValues: {
@@ -37,33 +32,19 @@ export default function Login() {
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
+            showLoading();
             try {
-                await authApi.signInWithEmailAndPassword(
-                    values.email, 
-                    values.password
-                );
-                
-                setSnackbar({
-                    open: true,
-                    message: 'Login successful!',
-                    severity: 'success'
-                });
-                
+                await login(values.email, values.password);
+                showNotification('Login successful!');
                 navigate(from, { replace: true });
             } catch (error) {
                 console.error('Error during login:', error);
-                setSnackbar({
-                    open: true,
-                    message: 'Login failed. Please check your credentials and try again.',
-                    severity: 'error'
-                });
+                showNotification('Login failed. Please check your credentials and try again.', 'error');
+            } finally {
+                hideLoading();
             }
         },
     });
-
-    const handleSnackbarClose = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
 
     return (
         <div className={styles['login-container']}>
@@ -101,6 +82,7 @@ export default function Login() {
                         variant="contained"
                         color="primary"
                         className={styles['login-button']}
+                        disabled={formik.isSubmitting}
                     >
                         Login
                     </Button>
@@ -109,19 +91,6 @@ export default function Login() {
                 <div className={styles['register-link']}>
                     <p>Don't have an account? <Link to="/register">Register</Link></p>
                 </div>
-
-                <Snackbar 
-                    open={snackbar.open} 
-                    autoHideDuration={3000} 
-                    onClose={handleSnackbarClose}
-                >
-                    <Alert 
-                        onClose={handleSnackbarClose} 
-                        severity={snackbar.severity}
-                    >
-                        {snackbar.message}
-                    </Alert>
-                </Snackbar>
             </div>
         </div>
     );

@@ -5,14 +5,12 @@ import {
     CardContent,
     Typography,
     Button,
-    CircularProgress,
     IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    Snackbar,
-    Alert
+    CircularProgress
 } from '@mui/material';
 import {
     Games as GamesIcon,
@@ -25,6 +23,8 @@ import {
 } from '@mui/icons-material';
 import styles from './Profile.module.scss';
 import authApi from '../../../api/authApi';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useUI } from '../../../contexts/UIContext';
 
 // Remove Game Dialog Component
 function RemoveGameDialog({ open, onClose, onConfirm }) {
@@ -43,52 +43,33 @@ function RemoveGameDialog({ open, onClose, onConfirm }) {
 }
 
 export default function Profile() {
-    const [user, setUser] = useState(null);
-    const [userProfile, setUserProfile] = useState(null);
     const [userGames, setUserGames] = useState([]);
     const [gameToRemove, setGameToRemove] = useState(null);
-    const [loading, setLoading] = useState(true);
     const [selectedFile, setSelectedFile] = useState(null);
     const [errorMessage, setErrorMessage] = useState(null);
     const [imageLoading, setImageLoading] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success'
-    });
-
+    
     const navigate = useNavigate();
+    const { user, userProfile, loading } = useAuth();
+    const { showLoading, hideLoading, showNotification } = useUI();
 
     useEffect(() => {
-        let unsubscribe;
-        const setupProfile = async () => {
-            unsubscribe = authApi.onAuthStateChange(async (currentUser) => {
-                setUser(currentUser);
-                if (currentUser) {
-                    const profile = await authApi.getUserProfile(currentUser.uid);
-                    setUserProfile(profile);
-                    loadUserGames(currentUser.uid);
-                }
-            });
-        };
-
-        setupProfile();
-
-        return () => {
-            unsubscribe?.();
-        };
-    }, []);
+        if (user) {
+            loadUserGames(user.uid);
+        }
+    }, [user]);
 
     const loadUserGames = async (userId) => {
+        showLoading();
         try {
             const games = await authApi.getUserGames(userId);
             setUserGames(games);
         } catch (error) {
             console.error('Error loading user games:', error);
-            showSnackbar('Error loading games', 'error');
+            showNotification('Error loading games', 'error');
         } finally {
-            setLoading(false);
+            hideLoading();
         }
     };
 
@@ -114,6 +95,7 @@ export default function Profile() {
     const uploadProfileImage = async () => {
         if (user && selectedFile) {
             setImageLoading(true);
+            showLoading();
             try {
                 // Generate a unique filename
                 const downloadURL = await authApi.uploadProfileImage(user.uid, selectedFile);
@@ -124,20 +106,17 @@ export default function Profile() {
                     updatedAt: new Date()
                 });
                 
-                // Refresh profile data
-                const updatedProfile = await authApi.getUserProfile(user.uid);
-                setUserProfile(updatedProfile);
                 setSelectedFile(null);
-                
-                showSnackbar('Profile image uploaded successfully!', 'success');
+                showNotification('Profile image uploaded successfully!', 'success');
             } catch (error) {
                 console.error('Error uploading profile image:', error);
-                showSnackbar(
+                showNotification(
                     error.message || 'Error uploading profile image. Please try again.', 
                     'error'
                 );
             } finally {
                 setImageLoading(false);
+                hideLoading();
             }
         }
     };
@@ -149,16 +128,18 @@ export default function Profile() {
 
     const handleRemoveGame = async () => {
         if (user && gameToRemove) {
+            showLoading();
             try {
                 await authApi.removeGameFromUserProfile(user.uid, gameToRemove._id);
                 await loadUserGames(user.uid);
-                showSnackbar('Game removed successfully', 'success');
+                showNotification('Game removed successfully', 'success');
             } catch (error) {
                 console.error('Error removing game:', error);
-                showSnackbar('Error removing game', 'error');
+                showNotification('Error removing game', 'error');
             } finally {
                 setGameToRemove(null);
                 setDialogOpen(false);
+                hideLoading();
             }
         }
     };
@@ -167,24 +148,8 @@ export default function Profile() {
         navigate(`/details/${gameId}`);
     };
 
-    const showSnackbar = (message, severity) => {
-        setSnackbar({
-            open: true,
-            message,
-            severity
-        });
-    };
-
-    const handleCloseSnackbar = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
-
     if (loading) {
-        return (
-            <div className={styles['loader-container']}>
-                <CircularProgress className={styles.loader} />
-            </div>
-        );
+        return null; // UI Context handles the loading indicator
     }
 
     return (
@@ -290,19 +255,6 @@ export default function Profile() {
                 onClose={() => setDialogOpen(false)}
                 onConfirm={handleRemoveGame}
             />
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={3000}
-                onClose={handleCloseSnackbar}
-            >
-                <Alert
-                    onClose={handleCloseSnackbar}
-                    severity={snackbar.severity}
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </div>
     );
 }

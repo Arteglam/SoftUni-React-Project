@@ -1,28 +1,16 @@
-import { useState, useEffect } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import authApi from '../../api/authApi';
+import { Navigate, Outlet } from 'react-router-dom';
+import { Box, CircularProgress } from '@mui/material';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function GuestGuard() {
-    const [isAuthenticated, setIsAuthenticated] = useState(null);
-    const location = useLocation();
+    const { isAuthenticated, loading } = useAuth();
 
-    useEffect(() => {
-        let unsubscribe;
-        const setupAuth = () => {
-            unsubscribe = authApi.onAuthStateChange((user) => {
-                setIsAuthenticated(!!user);
-            });
-        };
-
-        setupAuth();
-
-        return () => {
-            unsubscribe?.();
-        };
-    }, []);
-
-    if (isAuthenticated === null) {
-        return null;
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" m={4}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (isAuthenticated) {

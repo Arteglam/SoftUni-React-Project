@@ -1,15 +1,13 @@
-import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { 
     TextField, 
-    Button, 
-    Snackbar, 
-    Alert 
+    Button
 } from '@mui/material';
 import styles from './Register.module.scss';
-import authApi from '../../../api/authApi';
+import { useAuth } from '../../../contexts/AuthContext';
+import { useUI } from '../../../contexts/UIContext';
 
 const validationSchema = Yup.object({
     displayName: Yup.string()
@@ -28,11 +26,8 @@ const validationSchema = Yup.object({
 
 export default function Register() {
     const navigate = useNavigate();
-    const [snackbar, setSnackbar] = useState({
-        open: false,
-        message: '',
-        severity: 'success'
-    });
+    const { register } = useAuth();
+    const { showLoading, hideLoading, showNotification } = useUI();
 
     const formik = useFormik({
         initialValues: {
@@ -43,34 +38,24 @@ export default function Register() {
         },
         validationSchema: validationSchema,
         onSubmit: async (values) => {
+            showLoading();
             try {
-                await authApi.signUpWithEmailAndPassword(
+                await register(
                     values.email, 
                     values.password, 
                     values.displayName
                 );
                 
-                setSnackbar({
-                    open: true,
-                    message: 'Registration successful!',
-                    severity: 'success'
-                });
-                
+                showNotification('Registration successful!');
                 navigate('/profile');
             } catch (error) {
                 console.error('Error during registration:', error);
-                setSnackbar({
-                    open: true,
-                    message: 'Registration failed. Please try again.',
-                    severity: 'error'
-                });
+                showNotification('Registration failed. Please try again.', 'error');
+            } finally {
+                hideLoading();
             }
         },
     });
-
-    const handleSnackbarClose = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
 
     return (
         <div className={styles['register-container']}>
@@ -133,6 +118,7 @@ export default function Register() {
                         variant="contained"
                         color="primary"
                         className={styles['register-button']}
+                        disabled={formik.isSubmitting}
                     >
                         Register
                     </Button>
@@ -141,19 +127,6 @@ export default function Register() {
                 <div className={styles['login-link']}>
                     <p>Already have an account? <Link to="/login">Login</Link></p>
                 </div>
-
-                <Snackbar 
-                    open={snackbar.open} 
-                    autoHideDuration={3000} 
-                    onClose={handleSnackbarClose}
-                >
-                    <Alert 
-                        onClose={handleSnackbarClose} 
-                        severity={snackbar.severity}
-                    >
-                        {snackbar.message}
-                    </Alert>
-                </Snackbar>
             </div>
         </div>
     );
