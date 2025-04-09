@@ -13,47 +13,33 @@ export function GamesProvider({ children }) {
   const { showError } = useUI();
 
   const loadGames = async () => {
-    setLoading(true);
-    try {
-      // Load all games instead of just the first page
-      let allGames = [];
-      let currentPage = 1;
-      let hasMoreGames = true;
+    let allGames = [];
+    let currentPage = 1;
+    let hasMoreGames = true;
 
-      // Loop until we get all games
-      while (hasMoreGames) {
-        const gamesData = await gameApi.getGames(currentPage, 100);
-        allGames = [...allGames, ...gamesData];
-        
-        // If we received fewer than requested, we've reached the end
-        if (gamesData.length < 100) {
-          hasMoreGames = false;
-        } else {
-          currentPage++;
-        }
+    while (hasMoreGames) {
+      const gamesData = await gameApi.getGames(currentPage, 100);
+      allGames = [...allGames, ...gamesData];
+
+      if (gamesData.length < 100) {
+        hasMoreGames = false;
+      } else {
+        currentPage++;
       }
-
-      setGames(allGames);
-      applyFilters(allGames, searchTerm, sortCriteria);
-    } catch (error) {
-      console.error('Error loading games:', error);
-      showError('Failed to load games');
-    } finally {
-      setLoading(false);
     }
+
+    return allGames;
   };
 
   const applyFilters = (gamesArray, search, sort) => {
     let result = [...gamesArray];
     
-    // Apply search filter
     if (search) {
       result = result.filter(game => 
         game.title.toLowerCase().includes(search.toLowerCase())
       );
     }
     
-    // Apply sorting
     switch (sort) {
       case 'rating':
         result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
@@ -84,15 +70,40 @@ export function GamesProvider({ children }) {
   };
 
   useEffect(() => {
-    loadGames();
+    let isMounted = true;
+    
+    const loadAllGames = async () => {
+        setLoading(true);
+        try {
+            const allGames = await loadGames();
+            
+            if (isMounted) {
+                setGames(allGames);
+                applyFilters(allGames, searchTerm, sortCriteria);
+            }
+        } catch (error) {
+            console.error('Error loading games:', error);
+            if (isMounted) {
+                showError('Failed to load games');
+            }
+        } finally {
+            if (isMounted) {
+                setLoading(false);
+            }
+        }
+    };
+    
+    loadAllGames();
+    
+    return () => {
+        isMounted = false;
+    };
   }, []);
 
   const getGameById = async (id) => {
-    // Check if we already have the game in state to avoid extra API calls
     const gameInState = games.find(g => g._id === id);
     if (gameInState) return gameInState;
     
-    // If not found in state, get from API
     try {
       return await gameApi.getGameById(id);
     } catch (error) {
@@ -105,7 +116,7 @@ export function GamesProvider({ children }) {
   const createGame = async (gameData, userId, userDisplayName) => {
     try {
       const gameId = await gameApi.createGame(gameData, userId, userDisplayName);
-      await loadGames(); // Refresh games after creation
+      await loadGames(); 
       return gameId;
     } catch (error) {
       console.error('Error creating game:', error);
@@ -117,7 +128,7 @@ export function GamesProvider({ children }) {
   const updateGame = async (id, gameData) => {
     try {
       await gameApi.updateGame(id, gameData);
-      await loadGames(); // Refresh games after update
+      await loadGames(); 
     } catch (error) {
       console.error('Error updating game:', error);
       showError('Failed to update game');

@@ -46,22 +46,34 @@ export default function GamesCatalog() {
     const { showLoading, hideLoading, showNotification } = useUI();
 
     useEffect(() => {
-        if (user) {
-            loadUserGames(user.uid);
+        let isMounted = true;
+        
+        if (user && isMounted) {
+            const fetchUserGames = async () => {
+                try {
+                    const userGames = await authApi.getUserGames(user.uid);
+                    if (isMounted) {
+                        setUserGameIds(new Set(userGames.map(game => game._id)));
+                    }
+                } catch (error) {
+                    console.error('Error loading user games:', error);
+                    if (isMounted) {
+                        showNotification('Error loading user games', 'error');
+                    }
+                }
+            };
+            
+            fetchUserGames();
         }
         
-        paginateGames(filteredGames, page);
-    }, [user, filteredGames, page]);
-
-    const loadUserGames = async (userId) => {
-        try {
-            const userGames = await authApi.getUserGames(userId);
-            setUserGameIds(new Set(userGames.map(game => game._id)));
-        } catch (error) {
-            console.error('Error loading user games:', error);
-            showNotification('Error loading user games', 'error');
+        if (isMounted) {
+            paginateGames(filteredGames, page);
         }
-    };
+        
+        return () => {
+            isMounted = false;
+        };
+    }, [user, filteredGames, page]);
 
     const addGameToProfile = async (game) => {
         if (user) {
@@ -196,9 +208,9 @@ export default function GamesCatalog() {
                                                 minWidth: '120px',
                                                 height: '36px',
                                                 fontSize: '0.875rem',
-                                                textTransform: 'none',
-                                                fontWeight: 500,
-                                                marginRight: 0
+                                            textTransform: 'none',
+                                            fontWeight: 500,
+                                            marginRight: 0
                                             }}
                                         >
                                             Add Game
