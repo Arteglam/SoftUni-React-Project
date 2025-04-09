@@ -34,6 +34,7 @@ export default function GameDetails() {
     const [loading, setLoading] = useState(true);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [editingComment, setEditingComment] = useState(null);
+    const [comments, setComments] = useState([]); // Add this line
     const { id: gameId } = useParams();
     const navigate = useNavigate();
 
@@ -44,6 +45,7 @@ export default function GameDetails() {
                 setUser(currentUser);
             });
             await loadGameDetails();
+            await loadComments(); // Add this line
         };
         
         setupAuth();
@@ -66,12 +68,18 @@ export default function GameDetails() {
 
     const loadComments = async () => {
         try {
-            const comments = await commentsApi.getComments(gameId);
-            return comments;
+            const commentsData = await commentsApi.getComments(gameId);
+            setComments(commentsData); // Update comments state
+            return commentsData;
         } catch (error) {
             console.error('Error loading comments:', error);
+            setComments([]); // Set empty array on error
             return [];
         }
+    };
+
+    const refreshComments = async () => {
+        await loadComments();
     };
 
     const handleDeleteClick = () => {
@@ -117,7 +125,8 @@ export default function GameDetails() {
             <div className={styles['comments-section']}>
                 <GameComments 
                     gameId={gameId} 
-                    loadComments={loadComments} 
+                    loadComments={loadComments}
+                    comments={comments} // Pass comments state
                 />
             </div>
 
@@ -178,6 +187,7 @@ export default function GameDetails() {
                     gameId={gameId}
                     loadComments={loadComments}
                     onEditingCleared={() => setEditingComment(null)}
+                    refreshComments={refreshComments} // Pass refresh function
                 />
             </div>
 

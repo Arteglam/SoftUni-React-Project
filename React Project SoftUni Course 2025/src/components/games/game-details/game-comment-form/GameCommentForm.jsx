@@ -19,7 +19,7 @@ const validationSchema = Yup.object({
         .required('Comment is required')
 });
 
-export default function GameCommentForm({ gameId, loadComments }) {
+export default function GameCommentForm({ gameId, loadComments, onEditingCleared, refreshComments }) {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -54,9 +54,10 @@ export default function GameCommentForm({ gameId, loadComments }) {
                     };
                     await commentsApi.addComment(gameId, commentData);
                     resetForm();
-                    const updatedComments = await loadComments(); 
-                    if (typeof loadComments === 'function') {
-                        loadComments(updatedComments); 
+                    
+                    // Call refreshComments instead of loadComments
+                    if (refreshComments) {
+                        await refreshComments();
                     }
                 } catch (error) {
                     console.error('Error submitting comment:', error);

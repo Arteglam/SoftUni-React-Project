@@ -12,8 +12,7 @@ import commentsApi from '../../../../api/commentsApi';
 import { formatElapsedTime } from '../../../../utils/timeUtils';
 import styles from './GameComments.module.scss';
 
-export default function GameComments({ gameId, loadComments }) {
-    const [comments, setComments] = useState([]);
+export default function GameComments({ gameId, loadComments, comments }) {
     const [user, setUser] = useState(null);
     const [editingComment, setEditingComment] = useState(null);
     const [editText, setEditText] = useState('');
@@ -22,27 +21,21 @@ export default function GameComments({ gameId, loadComments }) {
     const [paginatedComments, setPaginatedComments] = useState([]);
     const pageSize = 5;
 
-    const refreshComments = async () => {
-        const newComments = await loadComments();
-        setComments(newComments);
-        paginateComments(newComments, 1);
-    };
-
-    useEffect(() => {
-        refreshComments();
-        
-        const unsubscribe = authApi.onAuthStateChange((currentUser) => {
-            setUser(currentUser);
-        });
-
-        return () => unsubscribe();
-    }, [gameId]);
-
     const paginateComments = (commentsArray, currentPage) => {
         const startIndex = (currentPage - 1) * pageSize;
         const endIndex = startIndex + pageSize;
         setPaginatedComments(commentsArray.slice(startIndex, endIndex));
     };
+
+    useEffect(() => {
+        const unsubscribe = authApi.onAuthStateChange((currentUser) => {
+            setUser(currentUser);
+        });
+        
+        paginateComments(comments, page);
+
+        return () => unsubscribe();
+    }, [gameId, comments, page]);
 
     const handlePageChange = (event, value) => {
         setPage(value);
@@ -52,7 +45,8 @@ export default function GameComments({ gameId, loadComments }) {
     const handleDeleteComment = async (commentId) => {
         try {
             await commentsApi.deleteComment(gameId, commentId);
-            await refreshComments(); 
+            // Refresh comments after deletion
+            await loadComments();
             setError(null);
         } catch (err) {
             setError('Failed to delete comment');
@@ -65,7 +59,8 @@ export default function GameComments({ gameId, loadComments }) {
         
         try {
             await commentsApi.updateComment(gameId, editingComment.id, editText);
-            await refreshComments(); 
+            // Refresh comments after update
+            await loadComments();
             setEditingComment(null);
             setEditText('');
         } catch (err) {
