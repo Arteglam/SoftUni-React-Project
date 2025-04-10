@@ -40,7 +40,6 @@ export default function GameComments({ gameId, loadComments, comments }) {
     const handleDeleteComment = async (commentId) => {
         try {
             await commentsApi.deleteComment(gameId, commentId);
-            // Refresh comments after deletion
             await loadComments();
         } catch (err) {
             showError('Failed to delete comment');
@@ -53,7 +52,6 @@ export default function GameComments({ gameId, loadComments, comments }) {
         
         try {
             await commentsApi.updateComment(gameId, editingComment.id, editText);
-            // Refresh comments after update
             await loadComments();
             setEditingComment(null);
             setEditText('');

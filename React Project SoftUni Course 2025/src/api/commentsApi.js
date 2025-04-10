@@ -14,7 +14,6 @@ import { db } from '../config/firebase-config';
 class CommentsApi {
     async getComments(gameId) {
         try {
-            // Create a reference to the comments subcollection
             const commentsCollection = collection(db, 'Games', gameId, 'Comments');
             const commentsQuery = query(commentsCollection, orderBy('createdAt', 'desc'));
             const querySnapshot = await getDocs(commentsQuery);
@@ -30,7 +29,6 @@ class CommentsApi {
 
     async addComment(gameId, commentData) {
         try {
-            // Create a reference to the comments subcollection
             const commentsCollection = collection(db, 'Games', gameId, 'Comments');
             const docRef = await addDoc(commentsCollection, {
                 ...commentData,
@@ -48,7 +46,6 @@ class CommentsApi {
 
     async deleteComment(gameId, commentId) {
         try {
-            // Create a reference to the specific comment document
             const commentRef = doc(db, 'Games', gameId, 'Comments', commentId);
             await deleteDoc(commentRef);
         } catch (error) {
@@ -59,7 +56,6 @@ class CommentsApi {
 
     async updateComment(gameId, commentId, newText) {
         try {
-            // Create a reference to the specific comment document
             const commentRef = doc(db, 'Games', gameId, 'Comments', commentId);
             await updateDoc(commentRef, { 
                 text: newText,

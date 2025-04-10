@@ -50,10 +50,8 @@ class AuthApi {
             if (userCredential.user) {
                 this.user = userCredential.user;
                 
-                // Update user profile with display name
                 await updateProfile(userCredential.user, { displayName });
 
-                // Create user document in Firestore
                 const userDocRef = doc(this.firestore, `Users/${userCredential.user.uid}`);
                 await setDoc(userDocRef, { email, displayName });
 
@@ -74,7 +72,6 @@ class AuthApi {
             );
 
             if (userCredential.user) {
-                // Check if user exists in Firestore
                 const userDocRef = doc(this.firestore, `Users/${userCredential.user.uid}`);
                 const userDocSnap = await getDoc(userDocRef);
 
@@ -128,14 +125,11 @@ class AuthApi {
 
     async uploadProfileImage(userId, file) {
         try {
-            // Create a reference with a unique filename
             const filename = `${Date.now()}_${file.name}`;
             const storageRef = ref(storage, `profileImages/${userId}/${filename}`);
             
-            // Upload the file
             const snapshot = await uploadBytes(storageRef, file);
             
-            // Get the download URL
             const downloadURL = await getDownloadURL(snapshot.ref);
             return downloadURL;
         } catch (error) {
@@ -175,6 +169,5 @@ class AuthApi {
     }
 }
 
-// Create and export a single instance
 const authApi = new AuthApi();
 export default authApi;

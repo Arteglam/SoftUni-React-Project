@@ -67,36 +67,31 @@ export default function GameCreate() {
             image: ''
         },
         validationSchema,
-        validateOnChange: true, // Enable validation as user types
-        validateOnBlur: true,   // Also validate when field loses focus
+        validateOnChange: true, 
+        validateOnBlur: true,   
         onSubmit: async (values) => {
             if (user) {
                 showLoading();
                 try {
                     await createGame(values, user.uid, user.displayName);
                     showNotification('Game created successfully!');
-                    setTimeout(() => {
-                        navigate('/catalog');
-                    }, 2000);
+                    hideLoading(); 
+                    navigate('/catalog');
                 } catch (error) {
                     console.error('Error creating game:', error);
                     showNotification('Error creating game. Please try again.', 'error');
-                } finally {
                     hideLoading();
                 }
             }
         }
     });
 
-    // This function helps check if we should show an error for a field
+
     const shouldShowError = (fieldName) => {
-        // Show error if field was touched OR if user has started typing in it
         return (formik.touched[fieldName] || formik.values[fieldName] !== '') && Boolean(formik.errors[fieldName]);
     };
 
-    // Get helper text for a field
     const getHelperText = (fieldName) => {
-        // Show error message if we should show error, otherwise show empty string
         return shouldShowError(fieldName) ? formik.errors[fieldName] : '';
     };
 

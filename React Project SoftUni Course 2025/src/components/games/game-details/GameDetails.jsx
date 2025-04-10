@@ -34,7 +34,7 @@ export default function GameDetails() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [editingComment, setEditingComment] = useState(null);
     const [game, setGame] = useState(null);
-    const [localLoading, setLocalLoading] = useState(true); // Add local loading state
+    const [localLoading, setLocalLoading] = useState(true);
     
     const { id: gameId } = useParams();
     const navigate = useNavigate();
@@ -44,17 +44,15 @@ export default function GameDetails() {
     const { showError, showNotification } = useUI();
 
     useEffect(() => {
-        let isMounted = true; // Add mounted flag to prevent state updates after unmount
+        let isMounted = true; 
         
         const loadData = async () => {
             setLocalLoading(true);
             try {
                 const gameData = await getGameById(gameId);
                 
-                // Check if component is still mounted and if gameData exists
                 if (!isMounted) return;
                 
-                // Check if gameData is actually returned
                 if (!gameData) {
                     throw new Error('Game not found');
                 }
@@ -64,7 +62,6 @@ export default function GameDetails() {
             } catch (error) {
                 console.error('Error loading data:', error);
                 showError('Error loading game details');
-                // Navigate back to catalog if game cannot be loaded
                 navigate('/catalog');
             } finally {
                 if (isMounted) {
@@ -75,11 +72,10 @@ export default function GameDetails() {
         
         loadData();
         
-        // Cleanup function to prevent state updates after unmount
         return () => {
             isMounted = false;
         };
-    }, [gameId]); // Remove unnecessary dependencies
+    }, [gameId]); 
 
     const loadComments = async () => {
         try {
@@ -125,7 +121,6 @@ export default function GameDetails() {
         return isAuthenticated && game && user.uid === game.userId;
     };
 
-    // Change the loading indicator to use local state
     if (localLoading) {
         return (
             <Box display="flex" justifyContent="center" alignItems="center" height="400px">

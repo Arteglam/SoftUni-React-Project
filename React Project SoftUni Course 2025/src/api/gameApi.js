@@ -21,7 +21,6 @@ class GameApi {
     }
 
     async getGames(page = 1, pageSize = 12, sortBy = 'createdAt') {
-        // Store last document for pagination
         if (page === 1) {
             this.lastVisible = null;
         }
@@ -31,14 +30,12 @@ class GameApi {
             let gamesQuery;
             
             if (page === 1 || !this.lastVisible) {
-                // First page query
                 gamesQuery = query(
                     gamesCollection,
                     orderBy(sortBy, 'desc'),
                     limit(pageSize)
                 );
             } else {
-                // Subsequent pages
                 gamesQuery = query(
                     gamesCollection,
                     orderBy(sortBy, 'desc'),
@@ -49,7 +46,6 @@ class GameApi {
             
             const querySnapshot = await getDocs(gamesQuery);
             
-            // Update the last visible document for next pagination
             const lastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
             if (lastDoc) {
                 this.lastVisible = lastDoc;

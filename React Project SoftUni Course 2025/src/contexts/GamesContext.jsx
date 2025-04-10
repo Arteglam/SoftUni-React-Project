@@ -116,7 +116,9 @@ export function GamesProvider({ children }) {
   const createGame = async (gameData, userId, userDisplayName) => {
     try {
       const gameId = await gameApi.createGame(gameData, userId, userDisplayName);
-      await loadGames(); 
+      const allGames = await loadGames(); 
+      setGames(allGames);
+      applyFilters(allGames, searchTerm, sortCriteria);
       return gameId;
     } catch (error) {
       console.error('Error creating game:', error);

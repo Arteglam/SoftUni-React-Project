@@ -112,7 +112,7 @@ export default function GamesCatalog() {
     };
 
     if (loading) {
-        return null; // UI Context handles the loading indicator
+        return null; 
     }
 
     return (
